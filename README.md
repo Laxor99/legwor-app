@@ -60,6 +60,3 @@ Számlákhoz és szerződésekhez PDF csatolható. Fájlok: `uploads/` mappa (`U
 
 ## Cég adatok
 
-**LEGWOR LABS SZÁMÍTÁSTECHNIKAI KERESKEDELMI ÉS SZOLGÁLTATÓ BETÉTI TÁRSASÁG**  
-9700 Szombathely, Irottkő u. 5.  
-Adószám: 21480799-2-18
