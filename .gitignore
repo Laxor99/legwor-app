@@ -3,3 +3,7 @@ dist
 .DS_Store
 .env
 .env.local
+.svelte-kit
+build
+uploads
+drizzle
