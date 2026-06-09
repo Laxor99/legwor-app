@@ -1,6 +1,5 @@
 # Legwor Labs Admin Portal
 
-Személyes havi adminisztrációs webalkalmazás Ferenc Kiss számára – munkaidő, utazási elszámolás, számlák, fizetések, EUR/HUF árfolyam, email asszisztens és szerződéskezelés.
 
 ## Tech stack
 
