@@ -1,3 +1,5 @@
+import type { Locale } from '$lib/i18n';
+
 const MONTH_NAMES_HU = [
 	'január',
 	'február',
@@ -29,22 +31,27 @@ export function formatMonthHu({ year, month }: YearMonth): string {
 	return `${year}. ${MONTH_NAMES_HU[month - 1]}`;
 }
 
+const MONTH_NAMES_EN = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December'
+];
+
 export function formatMonthEn({ year, month }: YearMonth): string {
-	const en = [
-		'January',
-		'February',
-		'March',
-		'April',
-		'May',
-		'June',
-		'July',
-		'August',
-		'September',
-		'October',
-		'November',
-		'December'
-	];
-	return `${en[month - 1]} ${year}`;
+	return `${MONTH_NAMES_EN[month - 1]} ${year}`;
+}
+
+export function formatMonth(ym: YearMonth, locale: Locale = 'hu'): string {
+	return locale === 'en' ? formatMonthEn(ym) : formatMonthHu(ym);
 }
 
 export function toMonthYear({ year, month }: YearMonth): string {
@@ -78,4 +85,13 @@ export function formatDateHu(dateStr: string | Date | null | undefined): string 
 	if (!dateStr) return '';
 	const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
 	return d.toLocaleDateString('hu-HU');
+}
+
+export function formatDate(
+	dateStr: string | Date | null | undefined,
+	locale: Locale = 'hu'
+): string {
+	if (!dateStr) return '';
+	const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+	return d.toLocaleDateString(locale === 'hu' ? 'hu-HU' : 'en-US');
 }

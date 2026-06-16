@@ -6,6 +6,15 @@ import { getAnnualLimit } from './config';
 
 export type WorkDayType = 'normal' | 'extra';
 
+function toDateKey(value: string | Date | null | undefined): string {
+	if (!value) return '';
+	if (typeof value === 'string') return value.slice(0, 10);
+	const y = value.getFullYear();
+	const m = String(value.getMonth() + 1).padStart(2, '0');
+	const d = String(value.getDate()).padStart(2, '0');
+	return `${y}-${m}-${d}`;
+}
+
 export async function getWorkDaysForMonth({ year, month }: YearMonth) {
 	return db.query.workDays.findMany({
 		where: and(eq(workDays.year, year), eq(workDays.month, month)),
@@ -17,9 +26,8 @@ export async function getWorkDaysMap({ year, month }: YearMonth): Promise<Record
 	const rows = await getWorkDaysForMonth({ year, month });
 	const map: Record<string, WorkDayType> = {};
 	for (const row of rows) {
-		if (row.workDate) {
-			map[String(row.workDate)] = row.dayType as WorkDayType;
-		}
+		const key = toDateKey(row.workDate);
+		if (key) map[key] = row.dayType as WorkDayType;
 	}
 	return map;
 }
@@ -61,7 +69,7 @@ export async function upsertWorkMonth(data: {
 	notes?: string;
 	workDaysMap?: Record<string, WorkDayType>;
 }) {
-	if (data.workDaysMap && Object.keys(data.workDaysMap).length > 0) {
+	if (data.workDaysMap !== undefined) {
 		const counts = await saveWorkDays(
 			{ year: data.year, month: data.month },
 			data.workDaysMap

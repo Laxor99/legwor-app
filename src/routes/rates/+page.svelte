@@ -1,35 +1,37 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
-	import { formatMonthHu } from '$lib/utils/dates';
+	import { t } from '$lib/i18n';
+	import { formatMonth } from '$lib/utils/dates';
 	import { formatRate } from '$lib/utils/format';
 	import { enhance } from '$app/forms';
 
 	let { data, form } = $props();
+	const locale = $derived(data.locale);
 </script>
 
 <svelte:head>
-	<title>EUR/HUF Árfolyam – Legwor Labs</title>
+	<title>{t(locale, 'rates.pageTitle')}</title>
 </svelte:head>
 
-<h1 class="page-title">EUR/HUF Árfolyam</h1>
-<p class="page-subtitle">{formatMonthHu({ year: data.year, month: data.month })}</p>
+<h1 class="page-title">{t(locale, 'rates.title')}</h1>
+<p class="page-subtitle">{formatMonth({ year: data.year, month: data.month }, locale)}</p>
 
 {#if data.rates.apiError}
-	<div class="alert-warning">Az API nem elérhető – utolsó mentett árfolyam megjelenítése.</div>
+	<div class="alert-warning">{t(locale, 'rates.apiError')}</div>
 {/if}
 {#if form?.success}
-	<div class="alert-success">Árfolyam kiválasztva!</div>
+	<div class="alert-success">{t(locale, 'rates.selected')}</div>
 {/if}
 
-<Card title="Aktuális árfolyamok (frankfurter.app)">
+<Card title={t(locale, 'rates.currentRates')}>
 	<div class="grid gap-4 md:grid-cols-3">
 		{#each [
-			{ type: 'spot', label: 'Jelenlegi árfolyam', value: data.rates.spotRate },
-			{ type: 'avg10d', label: 'Utolsó 10 nap átlaga', value: data.rates.avg10d },
-			{ type: 'avg30d', label: 'Utolsó 30 nap átlaga', value: data.rates.avg30d }
+			{ type: 'spot', labelKey: 'rates.spot', value: data.rates.spotRate },
+			{ type: 'avg10d', labelKey: 'rates.avg10d', value: data.rates.avg10d },
+			{ type: 'avg30d', labelKey: 'rates.avg30d', value: data.rates.avg30d }
 		] as rate}
 			<div class="inner-card">
-				<div class="text-sm text-muted">{rate.label}</div>
+				<div class="text-sm text-muted">{t(locale, rate.labelKey)}</div>
 				<div class="mt-1 text-2xl font-bold text-foreground">
 					{rate.value ? formatRate(rate.value) : '–'}
 				</div>
@@ -38,7 +40,7 @@
 						<input type="hidden" name="rateType" value={rate.type} />
 						<input type="hidden" name="value" value={rate.value} />
 						<button type="submit" class="btn-primary w-full text-xs">
-							Ezt használom ebben a hónapban
+							{t(locale, 'rates.useThisMonth')}
 						</button>
 					</form>
 				{/if}
@@ -48,12 +50,12 @@
 
 	{#if data.rates.selectedRate}
 		<div class="highlight-box">
-			<span class="text-sm text-primary">Kiválasztott árfolyam ehhez a hónaphoz:</span>
+			<span class="text-sm text-primary">{t(locale, 'rates.selectedForMonth')}</span>
 			<span class="ml-2 text-xl font-bold text-foreground">
 				{formatRate(data.rates.selectedRate)}
 			</span>
 		</div>
 	{:else}
-		<p class="mt-4 text-sm text-muted">Még nincs kiválasztott árfolyam ehhez a hónaphoz.</p>
+		<p class="mt-4 text-sm text-muted">{t(locale, 'rates.noneSelected')}</p>
 	{/if}
 </Card>

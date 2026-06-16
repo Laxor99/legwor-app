@@ -1,7 +1,8 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
-	import { formatMonthHu } from '$lib/utils/dates';
+	import { t, translatePaymentType } from '$lib/i18n';
+	import { formatMonth } from '$lib/utils/dates';
 	import { formatHuf, formatEur } from '$lib/utils/format';
 	import { calcAnnualProgress } from '$lib/utils/calculations';
 
@@ -10,45 +11,86 @@
 	const progress = $derived(
 		calcAnnualProgress(data.worktime.yearlyWorked, data.worktime.limit)
 	);
+	const locale = $derived(data.locale);
+	const checklistDone = $derived(data.checklist.filter((item) => item.done).length);
 </script>
 
 <svelte:head>
-	<title>Havi Összesítő – Legwor Labs</title>
+	<title>{t(locale, 'dashboard.pageTitle')}</title>
 </svelte:head>
 
-<h1 class="page-title">Havi Összesítő</h1>
+<h1 class="page-title">{t(locale, 'dashboard.title')}</h1>
 
 {#if data.dbError}
 	<div class="alert-warning">
-		Az adatbázis nem elérhető. Indítsd el a PostgreSQL-t (<code>docker compose up -d</code>),
-		majd futtasd: <code>npm run db:push && npm run db:seed</code>
+		{t(locale, 'dashboard.dbError')}
 	</div>
 {/if}
 
 <div class="mb-4 flex flex-wrap items-center gap-4 text-sm text-muted">
 	<span class="badge-month">
-		Aktív hónap: {formatMonthHu({ year: data.year, month: data.month })}
+		{t(locale, 'dashboard.activeMonth')}: {formatMonth({ year: data.year, month: data.month }, locale)}
 	</span>
-	{#if data.revenue.rate}
-		<span>EUR/HUF: {data.revenue.rate.toFixed(2)}</span>
-	{/if}
+</div>
+
+<div class="mb-4">
+	<Card title={t(locale, 'dashboard.checklist.title')}>
+	<div class="mb-4 flex items-center justify-between gap-4">
+		<span class="text-sm text-muted">
+			{checklistDone}/{data.checklist.length} {t(locale, 'dashboard.checklist.progress')}
+		</span>
+		<ProgressBar value={checklistDone} max={data.checklist.length} />
+	</div>
+	<ul class="space-y-1">
+		{#each data.checklist as item}
+			<li>
+				<a
+					href={item.href}
+					class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition hover:bg-card-hover {item.done
+						? 'text-muted'
+						: 'text-foreground'}"
+				>
+					<span
+						class="flex h-5 w-5 shrink-0 items-center justify-center text-base {item.done
+							? 'text-success'
+							: 'text-muted-dim'}"
+						aria-hidden="true"
+					>
+						{item.done ? '✓' : '○'}
+					</span>
+					<span class="shrink-0" aria-hidden="true">{item.icon}</span>
+					<span class={item.done ? 'line-through' : 'font-medium'}>{t(locale, item.labelKey)}</span>
+				</a>
+			</li>
+		{/each}
+	</ul>
+	</Card>
 </div>
 
 <div class="grid gap-4 lg:grid-cols-2">
-	<Card title="Munkaidő">
+	<Card title={t(locale, 'dashboard.worktime')}>
 		<div class="space-y-2 text-sm">
 			<div class="flex justify-between">
-				<span>Normál napok</span><span class="font-medium">{data.worktime.normalDays} nap</span>
+				<span>{t(locale, 'dashboard.normalDays')}</span><span class="font-medium"
+					>{data.worktime.normalDays} {t(locale, 'common.days')}</span
+				>
 			</div>
 			<div class="flex justify-between">
-				<span>Extra napok</span><span class="font-medium">{data.worktime.extraDays} nap</span>
+				<span>{t(locale, 'dashboard.extraDays')}</span><span class="font-medium"
+					>{data.worktime.extraDays} {t(locale, 'common.days')}</span
+				>
 			</div>
 			<div class="flex justify-between border-t pt-2">
-				<span>Összesen</span><span class="font-semibold">{data.worktime.totalDays} nap</span>
+				<span>{t(locale, 'common.total')}</span><span class="font-semibold"
+					>{data.worktime.totalDays} {t(locale, 'common.days')}</span
+				>
 			</div>
 			<div class="pt-3">
 				<div class="mb-1 flex justify-between text-xs text-muted">
-					<span>Éves: {data.worktime.yearlyWorked}/{data.worktime.limit} nap</span>
+					<span
+						>{t(locale, 'dashboard.annual')}: {data.worktime.yearlyWorked}/{data.worktime.limit}
+						{t(locale, 'common.days')}</span
+					>
 					<span>{progress.percent.toFixed(1)}%</span>
 				</div>
 				<ProgressBar
@@ -56,40 +98,50 @@
 					max={data.worktime.limit}
 					warning={progress.warning}
 				/>
-				<div class="mt-1 text-xs text-muted">Maradék: {progress.remaining} nap</div>
+				<div class="mt-1 text-xs text-muted">
+					{t(locale, 'dashboard.remaining')}: {progress.remaining} {t(locale, 'common.days')}
+				</div>
 			</div>
 		</div>
 	</Card>
 
-	<Card title="Bevétel">
+	<Card title={t(locale, 'dashboard.revenue')}>
 		<div class="text-sm">
-			<div class="text-lg font-semibold text-success">
-				Számla: {formatEur(data.revenue.eur)} = {formatHuf(data.revenue.huf)}
+			<div
+				class="group cursor-default text-lg font-semibold text-success"
+				title={formatEur(data.revenue.eur, locale)}
+			>
+				<span class="inline group-hover:hidden">
+					{t(locale, 'dashboard.invoice')}: {formatHuf(data.revenue.huf, locale)}
+				</span>
+				<span class="hidden group-hover:inline">
+					{t(locale, 'dashboard.invoice')}: {formatEur(data.revenue.eur, locale)}
+				</span>
 			</div>
 		</div>
 	</Card>
 
-	<Card title="Kiadások">
+	<Card title={t(locale, 'dashboard.expenses')}>
 		<div class="space-y-2 text-sm">
 			<div class="flex justify-between">
-				<span>Hotel</span><span>{formatHuf(data.expenses.hotel)}</span>
+				<span>{t(locale, 'dashboard.hotel')}</span><span>{formatHuf(data.expenses.hotel, locale)}</span>
 			</div>
 			<div class="flex justify-between">
-				<span>Autó</span><span>{formatHuf(data.expenses.car)}</span>
+				<span>{t(locale, 'dashboard.car')}</span><span>{formatHuf(data.expenses.car, locale)}</span>
 			</div>
 			<div class="flex justify-between">
-				<span>FleetCor</span><span>{formatHuf(data.expenses.fleetcor)}</span>
+				<span>FleetCor</span><span>{formatHuf(data.expenses.fleetcor, locale)}</span>
 			</div>
 		</div>
 	</Card>
 
-	<Card title="Fizetések (Maricának)">
+	<Card title={t(locale, 'dashboard.paymentsToMarica')}>
 		<div class="space-y-2 text-sm">
 			{#each data.payments.filter((p) => p.key !== 'fleetcor') as payment}
 				<div class="flex items-center justify-between">
-					<span>{payment.label}</span>
+					<span>{translatePaymentType(locale, payment.key).label}</span>
 					<span class="flex items-center gap-2">
-						{formatHuf(payment.actualAmount)}
+						{formatHuf(payment.actualAmount, locale)}
 						{#if payment.isPaid}
 							<span class="text-success">✅</span>
 						{:else}

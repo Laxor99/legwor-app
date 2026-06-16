@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import {
 	attachInvoiceFile,
 	createFleetCorQuick,
@@ -10,6 +11,7 @@ import {
 import { savePdfUpload } from '$lib/services/uploads';
 import { db } from '$lib/db';
 import { getDefaultActiveMonth, toMonthYear } from '$lib/utils/dates';
+import { parseNumber } from '$lib/utils/format';
 import type { Actions, PageServerLoad } from './$types';
 
 async function optionalPdf(form: FormData, subdir: string): Promise<string | undefined> {
@@ -35,7 +37,7 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	createIncoming: async ({ request, url }) => {
+	createIncoming: async ({ request, url, locals }) => {
 		const ym = getDefaultActiveMonth();
 		const year = Number(url.searchParams.get('year')) || ym.year;
 		const month = Number(url.searchParams.get('month')) || ym.month;
@@ -47,9 +49,9 @@ export const actions: Actions = {
 				issuer: String(form.get('issuer')),
 				invoiceNumber: String(form.get('invoiceNumber')),
 				invoiceDate: String(form.get('invoiceDate')),
-				netAmount: Number(form.get('netAmount')),
-				vatAmount: Number(form.get('vatAmount')),
-				grossAmount: Number(form.get('grossAmount')),
+				netAmount: parseNumber(form.get('netAmount')),
+				vatAmount: parseNumber(form.get('vatAmount')),
+				grossAmount: parseNumber(form.get('grossAmount')),
 				currency: String(form.get('currency') ?? 'HUF'),
 				category: String(form.get('category')),
 				monthYear: toMonthYear({ year, month }),
@@ -61,10 +63,12 @@ export const actions: Actions = {
 			});
 			return { success: true };
 		} catch (e) {
-			return fail(500, { error: e instanceof Error ? e.message : 'Mentés sikertelen.' });
+			return fail(500, {
+				error: e instanceof Error ? e.message : t(locals.locale, 'errors.saveFailed')
+			});
 		}
 	},
-	createOutgoing: async ({ request, url }) => {
+	createOutgoing: async ({ request, url, locals }) => {
 		const ym = getDefaultActiveMonth();
 		const year = Number(url.searchParams.get('year')) || ym.year;
 		const month = Number(url.searchParams.get('month')) || ym.month;
@@ -77,7 +81,7 @@ export const actions: Actions = {
 				recipient: String(form.get('recipient')),
 				invoiceNumber: String(form.get('invoiceNumber')),
 				invoiceDate: String(form.get('invoiceDate')),
-				grossAmount: Number(form.get('grossAmount')),
+				grossAmount: parseNumber(form.get('grossAmount')),
 				currency: String(form.get('currency') ?? 'EUR'),
 				monthYear: toMonthYear({ year, month }),
 				paymentStatus: String(form.get('paymentStatus') ?? 'Kiállítva'),
@@ -88,7 +92,9 @@ export const actions: Actions = {
 			});
 			return { success: true };
 		} catch (e) {
-			return fail(500, { error: e instanceof Error ? e.message : 'Mentés sikertelen.' });
+			return fail(500, {
+				error: e instanceof Error ? e.message : t(locals.locale, 'errors.saveFailed')
+			});
 		}
 	},
 	fleetcor: async ({ request, url }) => {
@@ -99,22 +105,24 @@ export const actions: Actions = {
 		const filePath = await optionalPdf(form, 'invoices');
 		const row = await createFleetCorQuick(
 			{ year, month },
-			Number(form.get('grossAmount')),
+			parseNumber(form.get('grossAmount')),
 			String(form.get('invoiceNumber'))
 		);
 		if (filePath && row) await attachInvoiceFile(row.id, filePath);
 		return { success: true };
 	},
-	uploadPdf: async ({ request }) => {
+	uploadPdf: async ({ request, locals }) => {
 		const form = await request.formData();
 		const id = Number(form.get('id'));
 		try {
 			const filePath = await optionalPdf(form, 'invoices');
-			if (!filePath) return fail(400, { error: 'Válassz PDF fájlt.' });
+			if (!filePath) return fail(400, { error: t(locals.locale, 'errors.selectPdf') });
 			await attachInvoiceFile(id, filePath);
 			return { success: true };
 		} catch (e) {
-			return fail(500, { error: e instanceof Error ? e.message : 'Feltöltés sikertelen.' });
+			return fail(500, {
+				error: e instanceof Error ? e.message : t(locals.locale, 'errors.uploadFailed')
+			});
 		}
 	},
 	markPaid: async ({ request }) => {

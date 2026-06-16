@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { setAnnualLimit } from '$lib/services/config';
 import {
 	getWorkDaysMap,
@@ -37,10 +38,11 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 };
 
-function parseWorkDaysJson(raw: string | null): Record<string, WorkDayType> | undefined {
+function parseWorkDaysJson(raw: string): Record<string, WorkDayType> | undefined {
 	if (!raw) return undefined;
 	try {
 		const parsed = JSON.parse(raw) as Record<string, string>;
+		if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return undefined;
 		const result: Record<string, WorkDayType> = {};
 		for (const [date, type] of Object.entries(parsed)) {
 			if (type === 'normal' || type === 'extra') result[date] = type;
@@ -51,19 +53,25 @@ function parseWorkDaysJson(raw: string | null): Record<string, WorkDayType> | un
 	}
 }
 
+function monthFromRequest(form: FormData, url: URL) {
+	const ym = getDefaultActiveMonth();
+	const year = Number(form.get('year')) || Number(url.searchParams.get('year')) || ym.year;
+	const month = Number(form.get('month')) || Number(url.searchParams.get('month')) || ym.month;
+	return { year, month };
+}
+
 export const actions: Actions = {
-	default: async ({ request, url }) => {
-		const ym = getDefaultActiveMonth();
-		const year = Number(url.searchParams.get('year')) || ym.year;
-		const month = Number(url.searchParams.get('month')) || ym.month;
+	saveCalendar: async ({ request, url, locals }) => {
 		const form = await request.formData();
-		const workDaysMap = parseWorkDaysJson(String(form.get('workDaysJson') ?? ''));
+		const { year, month } = monthFromRequest(form, url);
+		const raw = String(form.get('workDaysJson') ?? '');
+		const workDaysMap = raw ? parseWorkDaysJson(raw) : undefined;
 		const normalDays = Number(form.get('normalDays'));
 		const extraDays = Number(form.get('extraDays'));
 		const notes = String(form.get('notes') ?? '');
 
 		if (normalDays < 0 || extraDays < 0) {
-			return fail(400, { error: 'A napok száma nem lehet negatív.' });
+			return fail(400, { error: t(locals.locale, 'errors.negativeDays') });
 		}
 
 		try {
@@ -76,23 +84,23 @@ export const actions: Actions = {
 				workDaysMap
 			});
 			return { success: true };
-		} catch {
-			return fail(500, { error: 'Mentés sikertelen.' });
+		} catch (e) {
+			console.error('worktime save failed:', e);
+			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
 		}
 	},
-	setLimit: async ({ request, url }) => {
-		const ym = getDefaultActiveMonth();
-		const year = Number(url.searchParams.get('year')) || ym.year;
+	setLimit: async ({ request, url, locals }) => {
 		const form = await request.formData();
+		const { year } = monthFromRequest(form, url);
 		const limit = Number(form.get('limit'));
 		if (limit !== 220 && limit !== 228) {
-			return fail(400, { error: 'Érvénytelen limit.' });
+			return fail(400, { error: t(locals.locale, 'errors.invalidLimit') });
 		}
 		try {
 			await setAnnualLimit(year, limit);
 			return { success: true, limitUpdated: true };
 		} catch {
-			return fail(500, { error: 'Limit mentése sikertelen.' });
+			return fail(500, { error: t(locals.locale, 'errors.limitSaveFailed') });
 		}
 	}
 };

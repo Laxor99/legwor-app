@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
+	import { t } from '$lib/i18n';
 
 	let { data } = $props();
 
@@ -13,6 +14,8 @@
 		carExcel: false,
 		carPdf: false
 	});
+
+	const locale = $derived(data.locale);
 
 	$effect(() => {
 		if (!data.dashboard) return;
@@ -71,64 +74,64 @@ Ferenc Kiss`;
 </script>
 
 <svelte:head>
-	<title>Email Asszisztens – Legwor Labs</title>
+	<title>{t(locale, 'email.pageTitle')}</title>
 </svelte:head>
 
-<h1 class="page-title">Email Asszisztens</h1>
+<h1 class="page-title">{t(locale, 'email.title')}</h1>
 
 <div class="grid gap-6 lg:grid-cols-2">
-	<Card title="Jóváhagyás kérő email (Vincent Dupuis)">
+	<Card title={t(locale, 'email.approvalCard')}>
 		<div class="space-y-3">
 			<div>
-				<label class="form-label">Tárgy</label>
+				<label class="form-label">{t(locale, 'common.subject')}</label>
 				<input type="text" bind:value={approvalSubject} class="w-full" />
 			</div>
 			<div>
-				<label class="form-label">Szöveg</label>
+				<label class="form-label">{t(locale, 'common.body')}</label>
 				<textarea bind:value={approvalBody} rows="16" class="w-full font-mono text-xs"></textarea>
 			</div>
 			<button
 				class="btn-primary"
 				onclick={() => copyToClipboard(`Subject: ${approvalSubject}\n\n${approvalBody}`)}
 			>
-				Másolás vágólapra
+				{t(locale, 'common.copyToClipboard')}
 			</button>
 		</div>
 	</Card>
 
-	<Card title="Könyvelői email (Marica)">
+	<Card title={t(locale, 'email.accountantCard')}>
 		<div class="space-y-3">
 			<div class="space-y-2 text-sm">
 				<label class="flex items-center gap-2">
 					<input type="checkbox" bind:checked={docs.bankStatement} />
-					OTP bankszámlakivonat
+					{t(locale, 'email.bankStatement')}
 				</label>
 				<label class="flex items-center gap-2">
 					<input type="checkbox" bind:checked={docs.invoices} />
-					Számlák
+					{t(locale, 'email.invoices')}
 				</label>
 				<label class="flex items-center gap-2">
 					<input type="checkbox" bind:checked={docs.carExcel} />
-					Car Excel
+					{t(locale, 'email.carExcel')}
 				</label>
 				<label class="flex items-center gap-2">
 					<input type="checkbox" bind:checked={docs.carPdf} />
-					Car PDF
+					{t(locale, 'email.carPdf')}
 				</label>
 			</div>
 			<div>
-				<label class="form-label">Tárgy</label>
+				<label class="form-label">{t(locale, 'common.subject')}</label>
 				<input type="text" bind:value={accountantSubject} class="w-full" />
 			</div>
 			<div>
-				<label class="form-label">Szöveg</label>
+				<label class="form-label">{t(locale, 'common.body')}</label>
 				<textarea bind:value={accountantBody} rows="16" class="w-full font-mono text-xs"></textarea>
 			</div>
 			<button
 				class="btn-primary"
 				onclick={() => copyToClipboard(`Subject: ${accountantSubject}\n\n${accountantBody}`)}
 			>
-				Másolás vágólapra
+				{t(locale, 'common.copyToClipboard')}
 			</button>
 		</div>
 	</Card>

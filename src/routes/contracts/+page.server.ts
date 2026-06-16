@@ -1,9 +1,11 @@
 import { fail } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db';
 import { contracts } from '$lib/db/schema';
 import { deleteUpload, savePdfUpload } from '$lib/services/uploads';
 import { getDefaultActiveMonth } from '$lib/utils/dates';
+import { parseNumber } from '$lib/utils/format';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -21,7 +23,7 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	create: async ({ request }) => {
+	create: async ({ request, locals }) => {
 		const form = await request.formData();
 		try {
 			let filePath: string | null = null;
@@ -34,7 +36,7 @@ export const actions: Actions = {
 				contractNumber: String(form.get('contractNumber')),
 				startDate: String(form.get('startDate')) || null,
 				endDate: String(form.get('endDate')) || null,
-				dailyRate: String(form.get('dailyRate') ?? '0'),
+				dailyRate: String(parseNumber(form.get('dailyRate'))),
 				currency: String(form.get('currency') ?? 'EUR'),
 				paymentTerms: String(form.get('paymentTerms') ?? ''),
 				status: String(form.get('status') ?? 'active'),
@@ -43,14 +45,16 @@ export const actions: Actions = {
 			});
 			return { success: true };
 		} catch (e) {
-			return fail(500, { error: e instanceof Error ? e.message : 'Mentés sikertelen.' });
+			return fail(500, {
+				error: e instanceof Error ? e.message : t(locals.locale, 'errors.saveFailed')
+			});
 		}
 	},
-	uploadPdf: async ({ request }) => {
+	uploadPdf: async ({ request, locals }) => {
 		const form = await request.formData();
 		const id = Number(form.get('id'));
 		const file = form.get('pdf') as File | null;
-		if (!file || file.size === 0) return fail(400, { error: 'Válassz PDF fájlt.' });
+		if (!file || file.size === 0) return fail(400, { error: t(locals.locale, 'errors.selectPdf') });
 		try {
 			const current = await db.query.contracts.findFirst({ where: eq(contracts.id, id) });
 			if (current?.filePath) await deleteUpload(current.filePath);
@@ -58,7 +62,9 @@ export const actions: Actions = {
 			await db.update(contracts).set({ filePath }).where(eq(contracts.id, id));
 			return { success: true };
 		} catch (e) {
-			return fail(500, { error: e instanceof Error ? e.message : 'Feltöltés sikertelen.' });
+			return fail(500, {
+				error: e instanceof Error ? e.message : t(locals.locale, 'errors.uploadFailed')
+			});
 		}
 	},
 	toggleStatus: async ({ request }) => {

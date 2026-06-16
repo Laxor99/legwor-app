@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { t } from '$lib/i18n';
 import { getOrFetchRatesForMonth, selectRateForMonth } from '$lib/services/exchange-rate';
 import { getDefaultActiveMonth } from '$lib/utils/dates';
 import type { Actions, PageServerLoad } from './$types';
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	select: async ({ request, url }) => {
+	select: async ({ request, url, locals }) => {
 		const ym = getDefaultActiveMonth();
 		const year = Number(url.searchParams.get('year')) || ym.year;
 		const month = Number(url.searchParams.get('month')) || ym.month;
@@ -36,13 +37,13 @@ export const actions: Actions = {
 		const rateType = String(form.get('rateType')) as 'spot' | 'avg10d' | 'avg30d';
 		const value = Number(form.get('value'));
 
-		if (!value || value <= 0) return fail(400, { error: 'Érvénytelen árfolyam.' });
+		if (!value || value <= 0) return fail(400, { error: t(locals.locale, 'errors.invalidRate') });
 
 		try {
 			await selectRateForMonth({ year, month }, rateType, value);
 			return { success: true };
 		} catch {
-			return fail(500, { error: 'Mentés sikertelen.' });
+			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
 		}
 	}
 };
