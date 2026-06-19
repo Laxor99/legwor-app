@@ -3,12 +3,22 @@ export const messages = {
 	nav: {
 		dashboard: 'Monthly Summary',
 		dashboardShort: 'Summary',
+		travel: 'Travel Expenses',
+		travelShort: 'Travel',
 		worktime: 'Work Time Log',
 		worktimeShort: 'Work Time',
+		approval: 'Work/Travel Cost Approval',
+		approvalShort: 'Approval',
+		outgoing: 'Outgoing Invoice',
+		outgoingShort: 'Outgoing',
+		incoming: 'Incoming Invoices',
+		incomingShort: 'Incoming',
 		car: 'Travel Expenses',
 		carShort: 'Car',
 		invoices: 'Invoices',
 		invoicesShort: 'Invoices',
+		maricaEmail: 'Marica Summary Email',
+		maricaEmailShort: 'Marica Email',
 		email: 'Email Assistant',
 		emailShort: 'Email',
 		rates: 'EUR/HUF Exchange Rate',
@@ -16,7 +26,13 @@ export const messages = {
 		contracts: 'Contracts',
 		contractsShort: 'Contracts',
 		payments: 'Bank Account / Payments',
-		paymentsShort: 'Payments'
+		paymentsShort: 'Payments',
+		settings: 'Settings',
+		settingsShort: 'Settings',
+		workflow: 'Monthly workflow',
+		other: 'Other',
+		collapseSidebar: 'Collapse sidebar',
+		expandSidebar: 'Expand sidebar'
 	},
 	common: {
 		menu: 'Menu',
@@ -86,6 +102,7 @@ export const messages = {
 			outgoing: 'Outgoing invoice recorded',
 			incoming: 'Incoming invoices recorded',
 			car: 'Travel expenses entered',
+			approval: 'Approval submitted',
 			payments: 'Payments recorded'
 		}
 	},
@@ -185,7 +202,9 @@ export const messages = {
 		bankStatement: 'OTP bank statement',
 		invoices: 'Invoices',
 		carExcel: 'Car Excel',
-		carPdf: 'Car PDF'
+		carPdf: 'Car PDF',
+		maricaSent: 'Marica email marked as sent.',
+		markMaricaSent: 'Mark as sent'
 	},
 	rates: {
 		title: 'EUR/HUF Exchange Rate',
@@ -229,6 +248,64 @@ export const messages = {
 			ipa: { label: 'IPA', note: 'semi-annually' },
 			fleetcor: { label: 'FleetCor', note: 'not from Marica' }
 		}
+	},
+	approval: {
+		title: 'Work/Travel Cost Approval',
+		pageTitle: 'Approval – Legwor Labs',
+		preview: 'Preview – Time & Expenses',
+		actions: 'Status & actions',
+		submit: 'Submit for approval',
+		submitHint: 'Month data will be marked as submitted to Vincent Dupuis.',
+		openEmail: 'Open email',
+		markApproved: 'Approved',
+		markRejected: 'Rejected',
+		responseNotes: 'Response note (optional)',
+		responsePlaceholder: 'e.g. Approved. Thanks.',
+		rejectionReason: 'Rejection reason (required)',
+		rejectionRequired: 'Rejection reason is required.',
+		uploadDoc: 'Approval document (PDF)',
+		currentFile: 'Attached file'
+	},
+	settings: {
+		title: 'Settings',
+		pageTitle: 'Settings – Legwor Labs',
+		general: 'General',
+		storage: 'File storage',
+		navFuelUrl: 'NAV fuel price link',
+		annualLimit: 'Annual workday limit',
+		carPlate: 'License plate',
+		carType: 'Vehicle type',
+		consumption: 'Consumption (l/100km)',
+		amortization: 'Amortization (Ft/km)',
+		vincentName: 'Vincent Dupuis name',
+		vincentEmail: 'Vincent email',
+		maricaName: 'Marica name',
+		maricaEmail: 'Marica email',
+		storageMode: 'Storage mode',
+		localStorage: 'Local folder',
+		supabaseStorage: 'Supabase Storage',
+		localPath: 'Root path',
+		bucket: 'Bucket name',
+		apiKey: 'API key',
+		testConnection: 'Test connection',
+		storageFolders:
+			'Subfolders: szamlak/beerkezo, szamlak/kiallitott, excel_export, pdf_export, szerzodesek, approval_dokumentumok'
+	},
+	statusPanel: {
+		title: 'Month & Status',
+		subtitle: 'Scroll for more months',
+		year: 'Year'
+	},
+	status: {
+		folyamatban: 'In progress',
+		bekuldve: 'Submitted',
+		elfogadva: 'Approved',
+		elutasitva: 'Rejected',
+		szamlazva: 'Invoiced',
+		lezarva: 'Closed'
+	},
+	workflow: {
+		nextStep: 'Next step'
 	},
 	errors: {
 		wrongPin: 'Incorrect PIN.',

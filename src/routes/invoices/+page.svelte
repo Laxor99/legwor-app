@@ -10,10 +10,19 @@
 	import { formatMonth } from '$lib/utils/dates';
 	import { formatHuf, formatEur } from '$lib/utils/format';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
+	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
 
 	let { data } = $props();
-	let tab = $state<'incoming' | 'outgoing'>('incoming');
+	let tab = $state<'incoming' | 'outgoing'>(
+		($page.url.searchParams.get('tab') as 'incoming' | 'outgoing') || 'incoming'
+	);
 	const locale = $derived(data.locale);
+
+	$effect(() => {
+		const tabParam = $page.url.searchParams.get('tab');
+		if (tabParam === 'incoming' || tabParam === 'outgoing') tab = tabParam;
+	});
 
 	const categories = ['Üzemanyag', 'Hotel', 'FleetCor', 'Egyéb'] as const;
 	const incomingStatuses = ['Fizetendő', 'Fizetve'] as const;
@@ -207,3 +216,5 @@
 		{/if}
 	</Card>
 {/if}
+
+<WorkflowNext {locale} />

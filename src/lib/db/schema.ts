@@ -129,3 +129,32 @@ export const appConfig = pgTable('app_config', {
 	value: text('value'),
 	updatedAt: timestamp('updated_at').defaultNow()
 });
+
+export const approvals = pgTable('approvals', {
+	id: serial('id').primaryKey(),
+	year: integer('year').notNull(),
+	month: integer('month').notNull(),
+	status: varchar('status', { length: 20 }).default('folyamatban'),
+	submittedAt: timestamp('submitted_at'),
+	approvedAt: timestamp('approved_at'),
+	approverName: text('approver_name').default('Vincent Dupuis'),
+	approverResponse: text('approver_response'),
+	rejectionReason: text('rejection_reason'),
+	approvalFilePath: text('approval_file_path'),
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const storageConfig = pgTable('storage_config', {
+	id: serial('id').primaryKey(),
+	storageType: varchar('storage_type', { length: 20 }).default('local'),
+	localRootPath: text('local_root_path'),
+	supabaseUrl: text('supabase_url'),
+	supabaseBucket: text('supabase_bucket'),
+	supabaseKeyEncrypted: text('supabase_key_encrypted'),
+	isActive: boolean('is_active').default(true),
+	lastTestedAt: timestamp('last_tested_at'),
+	lastTestSuccess: boolean('last_test_success'),
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
+});

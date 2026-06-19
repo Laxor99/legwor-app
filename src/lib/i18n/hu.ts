@@ -3,12 +3,22 @@ export const messages = {
 	nav: {
 		dashboard: 'Havi Összesítő',
 		dashboardShort: 'Összesítő',
+		travel: 'Utazási elszámolás',
+		travelShort: 'Utazás',
 		worktime: 'Munkaidő nyilvántartás',
 		worktimeShort: 'Munkaidő',
+		approval: 'Munkaidő/Utazási költség elfogadás',
+		approvalShort: 'Elfogadás',
+		outgoing: 'Kiállított számla',
+		outgoingShort: 'Kiállított',
+		incoming: 'Beérkező számlák',
+		incomingShort: 'Beérkező',
 		car: 'Utazási elszámolás',
 		carShort: 'Autó',
 		invoices: 'Számlák',
 		invoicesShort: 'Számlák',
+		maricaEmail: 'Marica összesítő email',
+		maricaEmailShort: 'Marica email',
 		email: 'Email Asszisztens',
 		emailShort: 'Email',
 		rates: 'EUR/HUF Árfolyam',
@@ -16,7 +26,13 @@ export const messages = {
 		contracts: 'Szerződések',
 		contractsShort: 'Szerződések',
 		payments: 'Bankszámla / Fizetések',
-		paymentsShort: 'Fizetések'
+		paymentsShort: 'Fizetések',
+		settings: 'Beállítások',
+		settingsShort: 'Beállítások',
+		workflow: 'Havi munkafolyamat',
+		other: 'Egyéb',
+		collapseSidebar: 'Oldalsáv összecsukása',
+		expandSidebar: 'Oldalsáv kinyitása'
 	},
 	common: {
 		menu: 'Menü',
@@ -86,6 +102,7 @@ export const messages = {
 			outgoing: 'Kiállított számla rögzítve',
 			incoming: 'Beérkező számlák rögzítve',
 			car: 'Utazási elszámolás kész',
+			approval: 'Elfogadás beküldve',
 			payments: 'Fizetések rögzítve'
 		}
 	},
@@ -185,7 +202,9 @@ export const messages = {
 		bankStatement: 'OTP bankszámlakivonat',
 		invoices: 'Számlák',
 		carExcel: 'Car Excel',
-		carPdf: 'Car PDF'
+		carPdf: 'Car PDF',
+		maricaSent: 'Marica email elküldve jelölve.',
+		markMaricaSent: 'Elküldve jelölése'
 	},
 	rates: {
 		title: 'EUR/HUF Árfolyam',
@@ -229,6 +248,64 @@ export const messages = {
 			ipa: { label: 'IPA', note: 'félévente' },
 			fleetcor: { label: 'FleetCor', note: 'nem Maricától jön' }
 		}
+	},
+	approval: {
+		title: 'Munkaidő/Utazási költség elfogadás',
+		pageTitle: 'Elfogadás – Legwor Labs',
+		preview: 'Előnézet – Time & Expenses',
+		actions: 'Státusz és műveletek',
+		submit: 'Beküldés elfogadásra',
+		submitHint: 'A hónap adatai Vincent Dupuis felé beküldésre kerülnek (Beküldve státusz).',
+		openEmail: 'Email megnyitása',
+		markApproved: 'Elfogadva',
+		markRejected: 'Elutasítva',
+		responseNotes: 'Válasz megjegyzés (opcionális)',
+		responsePlaceholder: 'pl. Approved. Thanks.',
+		rejectionReason: 'Elutasítás oka (kötelező)',
+		rejectionRequired: 'Az elutasítás okát meg kell adni.',
+		uploadDoc: 'Jóváhagyó dokumentum (PDF)',
+		currentFile: 'Csatolt fájl'
+	},
+	settings: {
+		title: 'Beállítások',
+		pageTitle: 'Beállítások – Legwor Labs',
+		general: 'Általános',
+		storage: 'Fájltárolás',
+		navFuelUrl: 'NAV üzemanyagár link',
+		annualLimit: 'Éves munkanap limit',
+		carPlate: 'Rendszám',
+		carType: 'Gépjármű típus',
+		consumption: 'Fogyasztás (l/100km)',
+		amortization: 'Amortizáció (Ft/km)',
+		vincentName: 'Vincent Dupuis neve',
+		vincentEmail: 'Vincent email',
+		maricaName: 'Marica neve',
+		maricaEmail: 'Marica email',
+		storageMode: 'Tárolási mód',
+		localStorage: 'Helyi mappa',
+		supabaseStorage: 'Supabase Storage',
+		localPath: 'Gyökér elérési út',
+		bucket: 'Bucket név',
+		apiKey: 'API kulcs',
+		testConnection: 'Kapcsolat tesztelése',
+		storageFolders:
+			'Almappák: szamlak/beerkezo, szamlak/kiallitott, excel_export, pdf_export, szerzodesek, approval_dokumentumok'
+	},
+	statusPanel: {
+		title: 'Hónap & Státusz',
+		subtitle: 'Görgess a további hónapokért',
+		year: 'Év'
+	},
+	status: {
+		folyamatban: 'Folyamatban',
+		bekuldve: 'Beküldve',
+		elfogadva: 'Elfogadva',
+		elutasitva: 'Elutasítva',
+		szamlazva: 'Számlázva',
+		lezarva: 'Lezárva'
+	},
+	workflow: {
+		nextStep: 'Következő lépés'
 	},
 	errors: {
 		wrongPin: 'Hibás PIN.',

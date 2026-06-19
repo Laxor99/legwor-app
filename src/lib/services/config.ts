@@ -20,7 +20,11 @@ export const DEFAULT_CONFIG: Record<string, string> = {
 	company_address: '9700 Szombathely, Irottkő u. 5.',
 	company_tax: '21480799-2-18',
 	company_reg: '18 06 104897',
-	givaudan_client: 'Givaudan Business Solutions Kft.'
+	givaudan_client: 'Givaudan Business Solutions Kft.',
+	vincent_name: 'Vincent Dupuis',
+	vincent_email: '',
+	marica_name: 'Marica',
+	marica_email: ''
 };
 
 export async function getConfig(key: string): Promise<string> {

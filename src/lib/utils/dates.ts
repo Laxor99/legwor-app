@@ -54,6 +54,11 @@ export function formatMonth(ym: YearMonth, locale: Locale = 'hu'): string {
 	return locale === 'en' ? formatMonthEn(ym) : formatMonthHu(ym);
 }
 
+/** Month name only (no year) — for same-year lists. */
+export function formatMonthLabel({ month }: YearMonth, locale: Locale = 'hu'): string {
+	return locale === 'en' ? MONTH_NAMES_EN[month - 1] : MONTH_NAMES_HU[month - 1];
+}
+
 export function toMonthYear({ year, month }: YearMonth): string {
 	return `${year}-${String(month).padStart(2, '0')}`;
 }
@@ -79,6 +84,21 @@ export function monthOptions(count = 24): YearMonth[] {
 		options.push(shiftMonth(start, -i));
 	}
 	return options;
+}
+
+/** All months in a calendar year (Jan → Dec). */
+export function monthsInYear(year: number): YearMonth[] {
+	return Array.from({ length: 12 }, (_, i) => ({ year, month: i + 1 }));
+}
+
+/** Years for selectors (newest first). */
+export function yearOptions(fromYear = 2024): number[] {
+	const current = new Date().getFullYear();
+	const years: number[] = [];
+	for (let y = current; y >= fromYear; y--) {
+		years.push(y);
+	}
+	return years;
 }
 
 export function formatDateHu(dateStr: string | Date | null | undefined): string {

@@ -8,6 +8,7 @@ import { getCarSummary } from './car';
 import { getPaymentsForMonth } from './payments';
 import { getSelectedRate } from './exchange-rate';
 import { buildMonthlyChecklist } from './monthly-checklist';
+import { resolveMonthStatus } from './month-status';
 
 export async function getDashboardData(ym: YearMonth) {
 	const monthYear = toMonthYear(ym);
@@ -18,7 +19,7 @@ export async function getDashboardData(ym: YearMonth) {
 		getSelectedRate(ym)
 	]);
 
-	const [expenseRows, incomingCountRow, outgoing] = await Promise.all([
+	const [expenseRows, incomingCountRow, outgoing, approvalStatus] = await Promise.all([
 		db
 			.select({
 				category: invoices.category,
@@ -37,7 +38,8 @@ export async function getDashboardData(ym: YearMonth) {
 				totalHuf: sql<number>`COALESCE(SUM(${invoices.hufEquivalent}), 0)`
 			})
 			.from(invoices)
-			.where(and(eq(invoices.type, 'outgoing'), eq(invoices.monthYear, monthYear)))
+			.where(and(eq(invoices.type, 'outgoing'), eq(invoices.monthYear, monthYear))),
+		resolveMonthStatus(ym)
 	]);
 
 	const expenses: Record<string, number> = {};
@@ -56,7 +58,8 @@ export async function getDashboardData(ym: YearMonth) {
 		revenue: { eur: revenueEur },
 		incomingCount,
 		car: { tripCount: car.trips.length, motorwayCost: car.motorwayCost },
-		payments: paymentRows
+		payments: paymentRows,
+		approvalStatus
 	});
 
 	return {

@@ -6,6 +6,7 @@
 	import { formatHuf, formatNumber } from '$lib/utils/format';
 	import { calcPerKmRate } from '$lib/utils/calculations';
 	import { enhance } from '$app/forms';
+	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
 
 	let { data } = $props();
 
@@ -180,3 +181,5 @@
 		<button type="submit" class="btn-secondary">{t(locale, 'common.save')}</button>
 	</form>
 </Card>
+
+<WorkflowNext {locale} />
