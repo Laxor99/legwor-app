@@ -5,8 +5,7 @@
 	import { t, type Locale } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
 
-	let { eurRate = null, locale = 'hu' as Locale }: { eurRate?: number | null; locale?: Locale } =
-		$props();
+	let { locale = 'hu' as Locale }: { locale?: Locale } = $props();
 </script>
 
 <div class="flex min-h-[4.5rem] flex-nowrap items-center justify-between gap-3 px-4 py-3">
@@ -37,11 +36,6 @@
 
 	<div class="flex shrink-0 flex-nowrap items-center gap-2">
 		<LanguageSelector {locale} />
-		{#if eurRate}
-			<span class="hidden whitespace-nowrap text-xs text-muted sm:inline xl:text-sm">
-				EUR/HUF: {eurRate.toFixed(2)}
-			</span>
-		{/if}
 		<div
 			class="hidden whitespace-nowrap rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-white sm:block xl:px-3 xl:py-1.5 xl:text-sm"
 		>

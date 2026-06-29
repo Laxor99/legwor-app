@@ -27,6 +27,13 @@ export function getDefaultActiveMonth(date = new Date()): YearMonth {
 	return { year: d.getFullYear(), month: d.getMonth() + 1 };
 }
 
+export function yearMonthFromForm(form: FormData, url: URL): YearMonth {
+	const fallback = getDefaultActiveMonth();
+	const year = Number(form.get('year')) || Number(url.searchParams.get('year')) || fallback.year;
+	const month = Number(form.get('month')) || Number(url.searchParams.get('month')) || fallback.month;
+	return { year, month };
+}
+
 export function formatMonthHu({ year, month }: YearMonth): string {
 	return `${year}. ${MONTH_NAMES_HU[month - 1]}`;
 }

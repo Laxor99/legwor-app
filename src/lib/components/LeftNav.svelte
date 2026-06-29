@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { scrollWhenNeeded } from '$lib/actions/scrollWhenNeeded';
 	import { activeMonth } from '$lib/stores/month';
 	import { sidebarCollapsed, toggleSidebarCollapsed, mobileNavOpen } from '$lib/stores/nav';
+	import NavIcon from '$lib/components/NavIcon.svelte';
 	import {
 		overviewNavItem,
 		secondaryNavItems,
@@ -20,8 +22,8 @@
 	function linkClass(href: string, collapsed: boolean): string {
 		const active = $page.url.pathname === href || $page.url.pathname.startsWith(href + '/');
 		const base = collapsed
-			? 'flex items-center justify-center rounded-lg p-2.5 text-lg transition'
-			: 'flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition';
+			? 'flex items-center justify-center rounded-lg p-2.5 transition'
+			: 'flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition';
 		return `${base} ${active ? 'bg-primary/15 text-primary' : 'text-muted hover:bg-card hover:text-foreground'}`;
 	}
 
@@ -44,16 +46,16 @@
 		{$mobileNavOpen ? 'fixed inset-y-0 left-0 z-50 w-[260px] shadow-xl lg:static' : 'hidden lg:flex'}"
 	style="grid-area: left"
 >
-	<nav class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3">
+	<nav class="flex min-h-0 flex-1 flex-col gap-1 overflow-x-hidden p-3" use:scrollWhenNeeded>
 		<a
 			href={navigateWithMonth(overviewNavItem.href)}
 			class={linkClass(overviewNavItem.href, $mobileNavOpen ? false : $sidebarCollapsed)}
 			onclick={closeMobile}
 			title={t(locale, overviewNavItem.labelKey)}
 		>
-			<span aria-hidden="true">{overviewNavItem.icon}</span>
+			<NavIcon icon={overviewNavItem.icon} />
 			{#if $mobileNavOpen || !$sidebarCollapsed}
-				<span>{t(locale, overviewNavItem.labelKey)}</span>
+				<span class="min-w-0 truncate">{t(locale, overviewNavItem.headerLabelKey)}</span>
 			{/if}
 		</a>
 
@@ -72,9 +74,9 @@
 				onclick={closeMobile}
 				title={t(locale, item.labelKey)}
 			>
-				<span class="{$mobileNavOpen || !$sidebarCollapsed ? 'w-5 shrink-0 text-center' : ''}" aria-hidden="true">{item.icon}</span>
+				<NavIcon icon={item.icon} />
 				{#if $mobileNavOpen || !$sidebarCollapsed}
-					<span>{t(locale, item.labelKey)}</span>
+					<span class="min-w-0 truncate">{t(locale, item.headerLabelKey)}</span>
 				{/if}
 			</a>
 		{/each}
@@ -94,9 +96,9 @@
 				onclick={closeMobile}
 				title={t(locale, item.labelKey)}
 			>
-				<span class="{$mobileNavOpen || !$sidebarCollapsed ? 'w-5 shrink-0 text-center' : ''}" aria-hidden="true">{item.icon}</span>
+				<NavIcon icon={item.icon} />
 				{#if $mobileNavOpen || !$sidebarCollapsed}
-					<span>{t(locale, item.labelKey)}</span>
+					<span class="min-w-0 truncate">{t(locale, item.headerLabelKey)}</span>
 				{/if}
 			</a>
 		{/each}
@@ -109,18 +111,18 @@
 			onclick={closeMobile}
 			title={t(locale, settingsNavItem.labelKey)}
 		>
-			<span aria-hidden="true">{settingsNavItem.icon}</span>
+			<NavIcon icon={settingsNavItem.icon} />
 			{#if $mobileNavOpen || !$sidebarCollapsed}
-				<span>{t(locale, settingsNavItem.labelKey)}</span>
+				<span class="min-w-0 truncate">{t(locale, settingsNavItem.headerLabelKey)}</span>
 			{/if}
 		</a>
 		<button
 			type="button"
-			class="mt-2 hidden w-full rounded-lg border border-border px-2 py-1.5 text-xs text-muted hover:bg-card hover:text-foreground lg:block"
+			class="mt-2 hidden w-full items-center justify-center rounded-lg border border-border px-2 py-1.5 text-muted hover:bg-card hover:text-foreground lg:flex"
 			onclick={toggleSidebarCollapsed}
 			aria-label={$sidebarCollapsed ? t(locale, 'nav.expandSidebar') : t(locale, 'nav.collapseSidebar')}
 		>
-			{$sidebarCollapsed ? '→' : '←'}
+			<NavIcon icon={$sidebarCollapsed ? 'chevron-right' : 'chevron-left'} />
 		</button>
 	</div>
 </aside>

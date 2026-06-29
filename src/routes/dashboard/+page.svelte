@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
+	import NavIcon from '$lib/components/NavIcon.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import { t, translatePaymentType } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
@@ -27,15 +28,15 @@
 	</div>
 {/if}
 
-<div class="mb-4 flex flex-wrap items-center gap-4 text-sm text-muted">
+<div class="mb-3 flex flex-wrap items-center gap-4 text-sm text-muted">
 	<span class="badge-month">
 		{t(locale, 'dashboard.activeMonth')}: {formatMonth({ year: data.year, month: data.month }, locale)}
 	</span>
 </div>
 
-<div class="mb-4">
+<div class="mb-3">
 	<Card title={t(locale, 'dashboard.checklist.title')}>
-	<div class="mb-4 flex items-center justify-between gap-4">
+	<div class="mb-3 flex items-center justify-between gap-4">
 		<span class="text-sm text-muted">
 			{checklistDone}/{data.checklist.length} {t(locale, 'dashboard.checklist.progress')}
 		</span>
@@ -46,19 +47,19 @@
 			<li>
 				<a
 					href={item.href}
-					class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition hover:bg-card-hover {item.done
+					class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-card-hover {item.done
 						? 'text-muted'
 						: 'text-foreground'}"
 				>
-					<span
-						class="flex h-5 w-5 shrink-0 items-center justify-center text-base {item.done
-							? 'text-success'
-							: 'text-muted-dim'}"
-						aria-hidden="true"
-					>
-						{item.done ? '✓' : '○'}
-					</span>
-					<span class="shrink-0" aria-hidden="true">{item.icon}</span>
+					{#if item.done}
+						<NavIcon icon="circle-check" class="text-success" />
+					{:else}
+						<NavIcon icon="circle" class="text-muted-dim" regular />
+					{/if}
+					<NavIcon
+						icon={item.icon}
+						class={item.done ? 'text-muted' : 'text-primary'}
+					/>
 					<span class={item.done ? 'line-through' : 'font-medium'}>{t(locale, item.labelKey)}</span>
 				</a>
 			</li>
@@ -67,7 +68,7 @@
 	</Card>
 </div>
 
-<div class="grid gap-4 lg:grid-cols-2">
+<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 	<Card title={t(locale, 'dashboard.worktime')}>
 		<div class="space-y-2 text-sm">
 			<div class="flex justify-between">
@@ -143,7 +144,7 @@
 					<span class="flex items-center gap-2">
 						{formatHuf(payment.actualAmount, locale)}
 						{#if payment.isPaid}
-							<span class="text-success">✅</span>
+							<NavIcon icon="circle-check" class="text-success" />
 						{:else}
 							<span class="text-muted-dim">–</span>
 						{/if}

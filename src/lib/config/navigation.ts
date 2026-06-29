@@ -2,6 +2,7 @@ export interface NavItem {
 	href: string;
 	labelKey: string;
 	headerLabelKey: string;
+	/** Font Awesome solid icon name (without fa- prefix) */
 	icon: string;
 }
 

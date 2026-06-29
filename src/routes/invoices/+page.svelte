@@ -36,11 +36,23 @@
 <h1 class="page-title">{t(locale, 'invoices.title')}</h1>
 <p class="page-subtitle">{formatMonth({ year: data.year, month: data.month }, locale)}</p>
 
-<div class="mb-4 flex gap-2">
-	<button class="btn-secondary {tab === 'incoming' ? 'tab-active' : ''}" onclick={() => (tab = 'incoming')}>
+<div class="mb-4 inline-flex max-w-full flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
+	<button
+		type="button"
+		class="shrink-0 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition {tab === 'incoming'
+			? 'bg-primary text-white'
+			: 'text-muted hover:bg-card-hover hover:text-foreground'}"
+		onclick={() => (tab = 'incoming')}
+	>
 		{t(locale, 'invoices.incoming')}
 	</button>
-	<button class="btn-secondary {tab === 'outgoing' ? 'tab-active' : ''}" onclick={() => (tab = 'outgoing')}>
+	<button
+		type="button"
+		class="shrink-0 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition {tab === 'outgoing'
+			? 'bg-primary text-white'
+			: 'text-muted hover:bg-card-hover hover:text-foreground'}"
+		onclick={() => (tab = 'outgoing')}
+	>
 		{t(locale, 'invoices.outgoing')}
 	</button>
 </div>
@@ -128,17 +140,23 @@
 									{/if}
 								</td>
 								<td>{translateIncomingStatus(locale, inv.paymentStatus ?? '')}</td>
-								<td class="flex gap-2">
+								<td>
+									<div class="flex flex-wrap items-center gap-2">
 									{#if inv.paymentStatus !== 'Fizetve'}
 										<form method="POST" action="?/markPaid" use:enhance>
 											<input type="hidden" name="id" value={inv.id} />
-											<button type="submit" class="text-xs text-success">{t(locale, 'common.paid')}</button>
+											<button type="submit" class="whitespace-nowrap text-xs text-success"
+												>{t(locale, 'common.paid')}</button
+											>
 										</form>
 									{/if}
 									<form method="POST" action="?/delete" use:enhance>
 										<input type="hidden" name="id" value={inv.id} />
-										<button type="submit" class="text-xs text-danger">{t(locale, 'common.delete')}</button>
+										<button type="submit" class="whitespace-nowrap text-xs text-danger"
+											>{t(locale, 'common.delete')}</button
+										>
 									</form>
+									</div>
 								</td>
 							</tr>
 						{/each}

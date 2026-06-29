@@ -15,7 +15,6 @@
 </script>
 
 <AppShell
-	eurRate={data.eurRate}
 	locale={data.locale}
 	monthStatuses={data.monthStatuses}
 	year={data.year}

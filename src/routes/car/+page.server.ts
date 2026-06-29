@@ -8,7 +8,8 @@ import {
 	setMotorwayVignette
 } from '$lib/services/car';
 import { setConfig } from '$lib/services/config';
-import { getDefaultActiveMonth } from '$lib/utils/dates';
+import { syncNavFuelPriceFromWebsite } from '$lib/services/nav-fuel-price';
+import { getDefaultActiveMonth, yearMonthFromForm } from '$lib/utils/dates';
 import { parseNumber } from '$lib/utils/format';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -21,7 +22,17 @@ export const load: PageServerLoad = async ({ url }) => {
 			getCarDefaults(),
 			getCarSummary({ year, month })
 		]);
-		return { year, month, defaults, ...summary };
+
+		let navFuelSync: { monthLabel: string } | null = null;
+		if (defaults.navFuelUrl) {
+			const synced = await syncNavFuelPriceFromWebsite(defaults.navFuelUrl);
+			if (synced) {
+				defaults.navFuelPrice = synced.price;
+				navFuelSync = { monthLabel: synced.monthLabel };
+			}
+		}
+
+		return { year, month, defaults, navFuelSync, ...summary };
 	} catch {
 		return {
 			year,
@@ -39,16 +50,19 @@ export const load: PageServerLoad = async ({ url }) => {
 
 export const actions: Actions = {
 	addTrip: async ({ request, url, locals }) => {
-		const ym = getDefaultActiveMonth();
-		const year = Number(url.searchParams.get('year')) || ym.year;
-		const month = Number(url.searchParams.get('month')) || ym.month;
 		const form = await request.formData();
+		const { year, month } = yearMonthFromForm(form, url);
+		const fromLocation = String(form.get('fromLocation'));
+		const toLocation = String(form.get('toLocation'));
+		if (fromLocation === toLocation) {
+			return fail(400, { error: t(locals.locale, 'errors.sameTripLocation') });
+		}
 		try {
 			await addCarTrip({
 				year,
 				month,
-				fromLocation: String(form.get('fromLocation')),
-				toLocation: String(form.get('toLocation')),
+				fromLocation,
+				toLocation,
 				distanceKm: parseNumber(form.get('distanceKm')),
 				tripDate: String(form.get('tripDate')),
 				description: String(form.get('description') ?? '')
@@ -58,17 +72,22 @@ export const actions: Actions = {
 			return fail(500, { error: t(locals.locale, 'errors.tripAddFailed') });
 		}
 	},
-	deleteTrip: async ({ request }) => {
+	deleteTrip: async ({ request, locals }) => {
 		const form = await request.formData();
 		const id = Number(form.get('id'));
-		await deleteCarTrip(id);
-		return { success: true };
+		if (!Number.isFinite(id) || id <= 0) {
+			return fail(400, { error: t(locals.locale, 'errors.tripDeleteFailed') });
+		}
+		try {
+			await deleteCarTrip(id);
+			return { success: true };
+		} catch {
+			return fail(500, { error: t(locals.locale, 'errors.tripDeleteFailed') });
+		}
 	},
 	setVignette: async ({ request, url }) => {
-		const ym = getDefaultActiveMonth();
-		const year = Number(url.searchParams.get('year')) || ym.year;
-		const month = Number(url.searchParams.get('month')) || ym.month;
 		const form = await request.formData();
+		const { year, month } = yearMonthFromForm(form, url);
 		await setMotorwayVignette(
 			{ year, month },
 			parseNumber(form.get('motorwayCost')),

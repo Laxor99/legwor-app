@@ -16,7 +16,7 @@
 </script>
 
 {#if next}
-	<div class="mt-8 flex justify-end border-t border-border pt-4">
+	<div class="mt-4 flex justify-end border-t border-border pt-3">
 		<a href={nextHref()} class="btn-primary inline-flex items-center gap-2 text-sm">
 			{t(locale, 'workflow.nextStep')}: {t(locale, next.labelKey)} →
 		</a>

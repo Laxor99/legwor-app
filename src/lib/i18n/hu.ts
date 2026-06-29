@@ -140,9 +140,12 @@ export const messages = {
 		consumptionNorm: 'Fogyasztási norma',
 		amortization: 'Amortizáció',
 		perKmTotal: 'Ft/km összesen',
-		navFuelPrices: 'NAV üzemanyagárak →',
+		navFuelPrices: 'NAV üzemanyagárak',
 		navFuelPrice: 'NAV üzemanyagár (Ft/l)',
-		navLink: 'NAV link (szerkeszthető)',
+		navLink: 'NAV link',
+		editNavLink: 'Link szerkesztése',
+		saveLink: 'Link mentése',
+		navFuelPriceSynced: 'NAV-ról frissítve ({month}): {price} Ft/l',
 		saveSettings: 'Beállítások mentése',
 		summary: 'Összesítés',
 		totalKm: 'Összes km',
@@ -294,7 +297,8 @@ export const messages = {
 	statusPanel: {
 		title: 'Hónap & Státusz',
 		subtitle: 'Görgess a további hónapokért',
-		year: 'Év'
+		year: 'Év',
+		progress: 'feladat kész'
 	},
 	status: {
 		folyamatban: 'Folyamatban',
@@ -316,6 +320,8 @@ export const messages = {
 		invalidRate: 'Érvénytelen árfolyam.',
 		selectPdf: 'Válassz PDF fájlt.',
 		uploadFailed: 'Feltöltés sikertelen.',
-		tripAddFailed: 'Út hozzáadása sikertelen.'
+		tripAddFailed: 'Út hozzáadása sikertelen.',
+		tripDeleteFailed: 'Út törlése sikertelen.',
+		sameTripLocation: 'Az indulási hely és a célállomás nem lehet ugyanaz.'
 	}
 } as const;

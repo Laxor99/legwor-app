@@ -1,14 +1,27 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
 	import FormattedNumberInput from '$lib/components/FormattedNumberInput.svelte';
+	import NavIcon from '$lib/components/NavIcon.svelte';
+	import {
+		DEFAULT_TRIP_DISTANCE_KM,
+		DEFAULT_TRIP_FROM,
+		DEFAULT_TRIP_TO,
+		firstTripLocationOtherThan,
+		lookupTripDistance,
+		TRIP_LOCATIONS,
+		type TripLocation
+	} from '$lib/config/trip-locations';
 	import { t } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
 	import { formatHuf, formatNumber } from '$lib/utils/format';
 	import { calcPerKmRate } from '$lib/utils/calculations';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { get } from 'svelte/store';
 	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	const locale = $derived(data.locale);
 	const perKm = $derived(
@@ -18,6 +31,66 @@
 			data.defaults.amortization ?? 25
 		)
 	);
+
+	let tripFrom = $state<TripLocation>(DEFAULT_TRIP_FROM);
+	let tripTo = $state<TripLocation>(DEFAULT_TRIP_TO);
+	let tripDistance = $state<number | string | null>(DEFAULT_TRIP_DISTANCE_KM);
+
+	function syncTripDistance() {
+		const km = lookupTripDistance(tripFrom, tripTo);
+		tripDistance = km ?? '';
+	}
+
+	function onFromChange() {
+		if (tripFrom === tripTo) tripTo = firstTripLocationOtherThan(tripFrom);
+		syncTripDistance();
+	}
+
+	function onToChange() {
+		if (tripFrom === tripTo) tripFrom = firstTripLocationOtherThan(tripTo);
+		syncTripDistance();
+	}
+
+	function resetTripForm() {
+		tripFrom = DEFAULT_TRIP_FROM;
+		tripTo = DEFAULT_TRIP_TO;
+		tripDistance = DEFAULT_TRIP_DISTANCE_KM;
+	}
+
+	function monthUrl(): string {
+		const pathname = get(page).url.pathname;
+		return `${pathname}?year=${data.year}&month=${data.month}`;
+	}
+
+	function createMonthEnhance(onSuccess?: () => void) {
+		return () =>
+			async ({
+				result,
+				update
+			}: {
+				result: { type: string };
+				update: (opts?: { invalidateAll?: boolean }) => Promise<void>;
+			}) => {
+				if (result.type === 'success') {
+					onSuccess?.();
+					await update({ invalidateAll: true });
+					const url = get(page).url;
+					if (
+						Number(url.searchParams.get('year')) !== data.year ||
+						Number(url.searchParams.get('month')) !== data.month ||
+						url.searchParams.has('/deleteTrip')
+					) {
+						await goto(monthUrl(), {
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+					}
+				} else {
+					await update({ invalidateAll: true });
+				}
+			};
+	}
 </script>
 
 <svelte:head>
@@ -27,8 +100,13 @@
 <h1 class="page-title">{t(locale, 'car.title')}</h1>
 <p class="page-subtitle">{formatMonth({ year: data.year, month: data.month }, locale)}</p>
 
-<div class="mb-4 grid gap-4 lg:grid-cols-2">
-	<Card title={t(locale, 'car.vehicleData')}>
+{#if form?.error}
+	<div class="alert-error">{form.error}</div>
+{/if}
+
+<div class="flex flex-col gap-3">
+<div class="grid gap-3 lg:grid-cols-2">
+	<Card compact title={t(locale, 'car.vehicleData')}>
 		<div class="grid grid-cols-2 gap-2 text-sm">
 			<span>{t(locale, 'car.plate')}:</span><span class="font-medium">{data.defaults.carPlate}</span>
 			<span>{t(locale, 'car.type')}:</span><span>{data.defaults.carType}</span>
@@ -39,33 +117,67 @@
 				>{formatNumber(perKm, 2, locale)} Ft/km</span
 			>
 		</div>
-		<a
-			href={data.defaults.navFuelUrl}
-			target="_blank"
-			rel="noopener"
-			class="btn-secondary mt-4 inline-block text-xs"
-		>
-			{t(locale, 'car.navFuelPrices')}
-		</a>
-		<form method="POST" action="?/updateConfig" use:enhance class="mt-4 space-y-2 border-t pt-4">
+		<div class="mt-3 border-t pt-3 text-sm">
+			{#if data.defaults.navFuelUrl}
+				<a
+					href={data.defaults.navFuelUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="link-action truncate"
+					title={data.defaults.navFuelUrl}
+				>
+					{t(locale, 'car.navFuelPrices')} →
+				</a>
+			{:else}
+				<span class="text-muted-dim">—</span>
+			{/if}
+
+			<details class="mt-2">
+				<summary class="cursor-pointer text-xs text-muted hover:text-foreground">
+					{t(locale, 'car.editNavLink')}
+				</summary>
+				<form method="POST" action="?/updateConfig" use:enhance class="mt-2 space-y-2">
+					<div>
+						<label class="text-xs font-medium" for="navFuelUrl">{t(locale, 'car.navLink')}</label>
+						<input
+							id="navFuelUrl"
+							type="url"
+							name="navFuelUrl"
+							value={data.defaults.navFuelUrl}
+							class="w-full"
+							placeholder="https://"
+						/>
+					</div>
+					<button type="submit" class="btn-secondary text-xs">{t(locale, 'car.saveLink')}</button>
+				</form>
+			</details>
+		</div>
+		<form method="POST" action="?/updateConfig" use:enhance class="mt-3 space-y-2 border-t pt-3">
 			<div>
-				<label class="text-xs font-medium">{t(locale, 'car.navFuelPrice')}</label>
+				<label class="text-xs font-medium" for="navFuelPrice">{t(locale, 'car.navFuelPrice')}</label>
 				<FormattedNumberInput
+					id="navFuelPrice"
 					name="navFuelPrice"
 					value={data.defaults.navFuelPrice}
 					decimals={2}
 					class="w-full"
 				/>
-			</div>
-			<div>
-				<label class="text-xs font-medium">{t(locale, 'car.navLink')}</label>
-				<input type="url" name="navFuelUrl" value={data.defaults.navFuelUrl} class="w-full" />
+				{#if data.navFuelSync?.monthLabel}
+					<p class="mt-1 text-xs text-muted">
+						{t(locale, 'car.navFuelPriceSynced')
+							.replace('{month}', data.navFuelSync.monthLabel)
+							.replace(
+								'{price}',
+								formatNumber(data.defaults.navFuelPrice ?? 0, 0, locale)
+							)}
+					</p>
+				{/if}
 			</div>
 			<button type="submit" class="btn-secondary text-xs">{t(locale, 'car.saveSettings')}</button>
 		</form>
 	</Card>
 
-	<Card title={t(locale, 'car.summary')}>
+	<Card compact title={t(locale, 'car.summary')}>
 		<div class="space-y-2 text-sm">
 			<div class="flex justify-between">
 				<span>{t(locale, 'car.totalKm')}</span><span>{formatNumber(data.totalKm, 0, locale)} {t(locale, 'common.km')}</span>
@@ -99,17 +211,51 @@
 	</Card>
 </div>
 
-<Card title={t(locale, 'car.newTrip')}>
-	<form method="POST" action="?/addTrip" use:enhance class="grid gap-3 md:grid-cols-3">
-		<input type="text" name="fromLocation" placeholder={t(locale, 'common.from')} required />
-		<input type="text" name="toLocation" placeholder={t(locale, 'common.to')} required />
-		<FormattedNumberInput
-			name="distanceKm"
-			placeholder={t(locale, 'car.distance')}
-			decimals={2}
-			required
+<div class="grid gap-3 lg:grid-cols-2">
+<Card compact title={t(locale, 'car.newTrip')}>
+	<form
+		method="POST"
+		action="?/addTrip"
+		use:enhance={createMonthEnhance(resetTripForm)}
+		class="grid gap-3 md:grid-cols-3"
+	>
+		<input type="hidden" name="year" value={data.year} />
+		<input type="hidden" name="month" value={data.month} />
+		<select
+			name="fromLocation"
+			bind:value={tripFrom}
+			onchange={onFromChange}
 			class="w-full"
-		/>
+			required
+			aria-label={t(locale, 'common.from')}
+		>
+			{#each TRIP_LOCATIONS.filter((location) => location !== tripTo) as location}
+				<option value={location}>{location}</option>
+			{/each}
+		</select>
+		<select
+			name="toLocation"
+			bind:value={tripTo}
+			onchange={onToChange}
+			class="w-full"
+			required
+			aria-label={t(locale, 'common.to')}
+		>
+			{#each TRIP_LOCATIONS.filter((location) => location !== tripFrom) as location}
+				<option value={location}>{location}</option>
+			{/each}
+		</select>
+		<div class="flex items-center gap-2">
+			<FormattedNumberInput
+				name="distanceKm"
+				bind:value={tripDistance}
+				placeholder={t(locale, 'car.distance')}
+				decimals={2}
+				required
+				class="w-full"
+			/>
+			<span class="shrink-0 text-sm text-muted">{t(locale, 'common.km')}</span>
+		</div>
 		<input type="date" name="tripDate" required />
 		<input
 			type="text"
@@ -121,7 +267,7 @@
 	</form>
 </Card>
 
-<Card title={t(locale, 'car.tripLog')}>
+<Card compact title={t(locale, 'car.tripLog')}>
 	{#if data.trips.length === 0}
 		<p class="text-sm text-muted">{t(locale, 'common.noneRecordedTrips')}</p>
 	{:else}
@@ -139,7 +285,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.trips as trip}
+					{#each data.trips as trip (trip.id)}
 						<tr>
 							<td>{trip.tripDate}</td>
 							<td>{trip.fromLocation}</td>
@@ -148,11 +294,19 @@
 							<td>{formatHuf(trip.calculatedAmount, locale)}</td>
 							<td>{trip.description}</td>
 							<td>
-								<form method="POST" action="?/deleteTrip" use:enhance>
-									<input type="hidden" name="id" value={trip.id} />
-									<button type="submit" class="text-xs text-danger hover:underline"
-										>{t(locale, 'common.delete')}</button
+								<form
+									method="POST"
+									action="?year={data.year}&month={data.month}&/deleteTrip"
+									use:enhance={createMonthEnhance()}
+								>
+									<input type="hidden" name="id" value={String(trip.id)} />
+									<button
+										type="submit"
+										class="rounded p-1 text-danger transition hover:bg-danger/10"
+										aria-label={t(locale, 'common.delete')}
 									>
+										<NavIcon icon="trash-can" />
+									</button>
 								</form>
 							</td>
 						</tr>
@@ -162,9 +316,12 @@
 		</div>
 	{/if}
 </Card>
+</div>
 
-<Card title={t(locale, 'car.motorwayVignette')}>
-	<form method="POST" action="?/setVignette" use:enhance class="flex flex-wrap items-end gap-3">
+<Card compact title={t(locale, 'car.motorwayVignette')}>
+	<form method="POST" action="?/setVignette" use:enhance={createMonthEnhance()} class="flex flex-wrap items-end gap-3">
+		<input type="hidden" name="year" value={data.year} />
+		<input type="hidden" name="month" value={data.month} />
 		<div>
 			<label class="mb-1 block text-xs font-medium">{t(locale, 'car.vignetteAmount')}</label>
 			<FormattedNumberInput name="motorwayCost" value={data.motorwayCost || ''} class="w-full" />
@@ -183,3 +340,4 @@
 </Card>
 
 <WorkflowNext {locale} />
+</div>

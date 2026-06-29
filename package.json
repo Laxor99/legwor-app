@@ -27,6 +27,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.0",
     "drizzle-orm": "^0.39.0",
     "pdfmake": "^0.2.18",
     "postgres": "^3.4.5",

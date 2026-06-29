@@ -140,9 +140,12 @@ export const messages = {
 		consumptionNorm: 'Consumption norm',
 		amortization: 'Amortization',
 		perKmTotal: 'Total Ft/km',
-		navFuelPrices: 'NAV fuel prices →',
+		navFuelPrices: 'NAV fuel prices',
 		navFuelPrice: 'NAV fuel price (Ft/l)',
-		navLink: 'NAV link (editable)',
+		navLink: 'NAV link',
+		editNavLink: 'Edit link',
+		saveLink: 'Save link',
+		navFuelPriceSynced: 'Synced from NAV ({month}): {price} Ft/l',
 		saveSettings: 'Save settings',
 		summary: 'Summary',
 		totalKm: 'Total km',
@@ -294,7 +297,8 @@ export const messages = {
 	statusPanel: {
 		title: 'Month & Status',
 		subtitle: 'Scroll for more months',
-		year: 'Year'
+		year: 'Year',
+		progress: 'tasks done'
 	},
 	status: {
 		folyamatban: 'In progress',
@@ -316,6 +320,8 @@ export const messages = {
 		invalidRate: 'Invalid exchange rate.',
 		selectPdf: 'Select a PDF file.',
 		uploadFailed: 'Upload failed.',
-		tripAddFailed: 'Failed to add trip.'
+		tripAddFailed: 'Failed to add trip.',
+		tripDeleteFailed: 'Failed to delete trip.',
+		sameTripLocation: 'Departure and destination must be different.'
 	}
 } as const;

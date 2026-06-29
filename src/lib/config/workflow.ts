@@ -2,27 +2,27 @@ import type { NavItem } from './navigation';
 
 /** Monthly workflow steps in order (spec B). */
 export const workflowSteps: NavItem[] = [
-	{ href: '/travel', labelKey: 'nav.travel', headerLabelKey: 'nav.travelShort', icon: '🚗' },
-	{ href: '/worktime', labelKey: 'nav.worktime', headerLabelKey: 'nav.worktimeShort', icon: '⏱️' },
-	{ href: '/approval', labelKey: 'nav.approval', headerLabelKey: 'nav.approvalShort', icon: '✅' },
+	{ href: '/travel', labelKey: 'nav.travel', headerLabelKey: 'nav.travelShort', icon: 'car' },
+	{ href: '/worktime', labelKey: 'nav.worktime', headerLabelKey: 'nav.worktimeShort', icon: 'clock' },
+	{ href: '/approval', labelKey: 'nav.approval', headerLabelKey: 'nav.approvalShort', icon: 'circle-check' },
 	{
 		href: '/invoices/outgoing',
 		labelKey: 'nav.outgoing',
 		headerLabelKey: 'nav.outgoingShort',
-		icon: '📤'
+		icon: 'file-export'
 	},
 	{
 		href: '/invoices/incoming',
 		labelKey: 'nav.incoming',
 		headerLabelKey: 'nav.incomingShort',
-		icon: '📥'
+		icon: 'file-import'
 	},
-	{ href: '/payments', labelKey: 'nav.payments', headerLabelKey: 'nav.paymentsShort', icon: '🏦' },
+	{ href: '/payments', labelKey: 'nav.payments', headerLabelKey: 'nav.paymentsShort', icon: 'building-columns' },
 	{
 		href: '/email/marica-summary',
 		labelKey: 'nav.maricaEmail',
 		headerLabelKey: 'nav.maricaEmailShort',
-		icon: '✉️'
+		icon: 'envelope'
 	}
 ];
 
@@ -30,19 +30,19 @@ export const overviewNavItem: NavItem = {
 	href: '/dashboard',
 	labelKey: 'nav.dashboard',
 	headerLabelKey: 'nav.dashboardShort',
-	icon: '📅'
+	icon: 'chart-pie'
 };
 
 export const secondaryNavItems: NavItem[] = [
-	{ href: '/rates', labelKey: 'nav.rates', headerLabelKey: 'nav.ratesShort', icon: '💶' },
-	{ href: '/contracts', labelKey: 'nav.contracts', headerLabelKey: 'nav.contractsShort', icon: '📋' }
+	{ href: '/rates', labelKey: 'nav.rates', headerLabelKey: 'nav.ratesShort', icon: 'euro-sign' },
+	{ href: '/contracts', labelKey: 'nav.contracts', headerLabelKey: 'nav.contractsShort', icon: 'file-contract' }
 ];
 
 export const settingsNavItem: NavItem = {
 	href: '/settings',
 	labelKey: 'nav.settings',
 	headerLabelKey: 'nav.settingsShort',
-	icon: '⚙️'
+	icon: 'gear'
 };
 
 export function getNextWorkflowStep(pathname: string, searchParams?: URLSearchParams): NavItem | null {
