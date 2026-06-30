@@ -4,8 +4,6 @@
 	import { t } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
 	import { enhance } from '$app/forms';
-	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
-
 	let { data } = $props();
 	const locale = $derived(data.locale);
 </script>
@@ -62,5 +60,3 @@
 		{/each}
 	</div>
 </Card>
-
-<WorkflowNext {locale} />

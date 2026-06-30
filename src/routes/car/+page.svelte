@@ -19,8 +19,6 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { get } from 'svelte/store';
-	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
-
 	let { data, form } = $props();
 
 	const locale = $derived(data.locale);
@@ -339,5 +337,4 @@
 	</form>
 </Card>
 
-<WorkflowNext {locale} />
 </div>

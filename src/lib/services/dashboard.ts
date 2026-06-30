@@ -65,6 +65,12 @@ export async function getDashboardData(ym: YearMonth) {
 	return {
 		worktime,
 		revenue: { eur: revenueEur, huf: revenueHuf, rate: eurRate },
+		car: {
+			totalAmount: car.totalAmount,
+			tripAmount: car.tripAmount,
+			motorwayCost: car.motorwayCost,
+			tripCount: car.trips.length
+		},
 		expenses: {
 			hotel: expenses['Hotel'] ?? 0,
 			car: car.totalAmount,

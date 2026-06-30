@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
 	import FormattedNumberInput from '$lib/components/FormattedNumberInput.svelte';
+	import NavIcon from '$lib/components/NavIcon.svelte';
 	import {
 		t,
 		translateIncomingStatus,
@@ -10,19 +11,51 @@
 	import { formatMonth } from '$lib/utils/dates';
 	import { formatHuf, formatEur } from '$lib/utils/format';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
+	import { get } from 'svelte/store';
 
 	let { data } = $props();
-	let tab = $state<'incoming' | 'outgoing'>(
-		($page.url.searchParams.get('tab') as 'incoming' | 'outgoing') || 'incoming'
-	);
+
+	function tabFromUrl(url: URL): 'incoming' | 'outgoing' {
+		const tabParam = url.searchParams.get('tab');
+		if (tabParam === 'incoming' || tabParam === 'outgoing') return tabParam;
+		if (url.pathname.startsWith('/invoices/incoming')) return 'incoming';
+		if (url.pathname.startsWith('/invoices/outgoing')) return 'outgoing';
+		return 'outgoing';
+	}
+
+	let tab = $state<'incoming' | 'outgoing'>(tabFromUrl(get(page).url));
 	const locale = $derived(data.locale);
 
 	$effect(() => {
-		const tabParam = $page.url.searchParams.get('tab');
-		if (tabParam === 'incoming' || tabParam === 'outgoing') tab = tabParam;
+		tab = tabFromUrl($page.url);
 	});
+
+	function setTab(next: 'incoming' | 'outgoing') {
+		const url = new URL(get(page).url);
+		url.searchParams.set('tab', next);
+		goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	function preserveTab(expected: 'incoming' | 'outgoing') {
+		return () =>
+			async ({
+				result,
+				update
+			}: {
+				result: { type: string };
+				update: (opts?: { invalidateAll?: boolean }) => Promise<void>;
+			}) => {
+				await update();
+				if (result.type !== 'success') return;
+				const url = new URL(get(page).url);
+				if (url.searchParams.get('tab') !== expected) {
+					url.searchParams.set('tab', expected);
+					await goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+				}
+			};
+	}
 
 	const categories = ['Üzemanyag', 'Hotel', 'FleetCor', 'Egyéb'] as const;
 	const incomingStatuses = ['Fizetendő', 'Fizetve'] as const;
@@ -39,28 +72,28 @@
 <div class="mb-4 inline-flex max-w-full flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
 	<button
 		type="button"
-		class="shrink-0 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition {tab === 'incoming'
-			? 'bg-primary text-white'
-			: 'text-muted hover:bg-card-hover hover:text-foreground'}"
-		onclick={() => (tab = 'incoming')}
-	>
-		{t(locale, 'invoices.incoming')}
-	</button>
-	<button
-		type="button"
 		class="shrink-0 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition {tab === 'outgoing'
 			? 'bg-primary text-white'
 			: 'text-muted hover:bg-card-hover hover:text-foreground'}"
-		onclick={() => (tab = 'outgoing')}
+		onclick={() => setTab('outgoing')}
 	>
 		{t(locale, 'invoices.outgoing')}
+	</button>
+	<button
+		type="button"
+		class="shrink-0 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition {tab === 'incoming'
+			? 'bg-primary text-white'
+			: 'text-muted hover:bg-card-hover hover:text-foreground'}"
+		onclick={() => setTab('incoming')}
+	>
+		{t(locale, 'invoices.incoming')}
 	</button>
 </div>
 
 {#if tab === 'incoming'}
 	<div class="grid gap-4 lg:grid-cols-2">
 		<Card title={t(locale, 'invoices.newIncoming')}>
-			<form method="POST" action="?/createIncoming" enctype="multipart/form-data" use:enhance class="space-y-3">
+			<form method="POST" action="?/createIncoming" enctype="multipart/form-data" use:enhance={preserveTab('incoming')} class="space-y-3">
 				<input type="text" name="issuer" placeholder={t(locale, 'invoices.issuer')} required class="w-full" />
 				<div class="grid grid-cols-2 gap-2">
 					<input type="date" name="invoiceDate" required />
@@ -93,7 +126,7 @@
 		</Card>
 
 		<Card title={t(locale, 'invoices.fleetcorQuick')}>
-			<form method="POST" action="?/fleetcor" enctype="multipart/form-data" use:enhance class="space-y-3">
+			<form method="POST" action="?/fleetcor" enctype="multipart/form-data" use:enhance={preserveTab('incoming')} class="space-y-3">
 				<input type="text" name="invoiceNumber" placeholder={t(locale, 'invoices.invoiceNumber')} required class="w-full" />
 				<FormattedNumberInput name="grossAmount" placeholder={t(locale, 'invoices.grossAmountHuf')} required class="w-full" />
 				<div>
@@ -132,7 +165,7 @@
 									{#if inv.filePath}
 										<a href="/api/files/{inv.filePath}" target="_blank" class="link-action text-xs">PDF</a>
 									{:else}
-										<form method="POST" action="?/uploadPdf" enctype="multipart/form-data" use:enhance class="flex items-center gap-1">
+										<form method="POST" action="?/uploadPdf" enctype="multipart/form-data" use:enhance={preserveTab('incoming')} class="flex items-center gap-1">
 											<input type="hidden" name="id" value={inv.id} />
 											<input type="file" name="pdf" accept=".pdf" class="max-w-[100px] text-xs" required />
 											<button type="submit" class="link-action text-xs">↑</button>
@@ -143,18 +176,22 @@
 								<td>
 									<div class="flex flex-wrap items-center gap-2">
 									{#if inv.paymentStatus !== 'Fizetve'}
-										<form method="POST" action="?/markPaid" use:enhance>
+										<form method="POST" action="?/markPaid" use:enhance={preserveTab('incoming')}>
 											<input type="hidden" name="id" value={inv.id} />
 											<button type="submit" class="whitespace-nowrap text-xs text-success"
 												>{t(locale, 'common.paid')}</button
 											>
 										</form>
 									{/if}
-									<form method="POST" action="?/delete" use:enhance>
+									<form method="POST" action="?/delete" use:enhance={preserveTab('incoming')}>
 										<input type="hidden" name="id" value={inv.id} />
-										<button type="submit" class="whitespace-nowrap text-xs text-danger"
-											>{t(locale, 'common.delete')}</button
+										<button
+											type="submit"
+											class="rounded p-1 text-danger transition hover:bg-danger/10"
+											aria-label={t(locale, 'common.delete')}
 										>
+											<NavIcon icon="trash-can" />
+										</button>
 									</form>
 									</div>
 								</td>
@@ -167,7 +204,7 @@
 	</Card>
 {:else}
 	<Card title={t(locale, 'invoices.newOutgoing')}>
-		<form method="POST" action="?/createOutgoing" enctype="multipart/form-data" use:enhance class="grid gap-3 md:grid-cols-2">
+		<form method="POST" action="?/createOutgoing" enctype="multipart/form-data" use:enhance={preserveTab('outgoing')} class="grid gap-3 md:grid-cols-2">
 			<input type="text" name="recipient" placeholder={t(locale, 'common.client')} required />
 			<input type="text" name="invoiceNumber" placeholder={t(locale, 'invoices.invoiceNumber')} required />
 			<input type="date" name="invoiceDate" required />
@@ -222,7 +259,7 @@
 							</td>
 							<td>{translateOutgoingStatus(locale, inv.paymentStatus ?? '')}</td>
 							<td>
-								<form method="POST" action="?/delete" use:enhance>
+								<form method="POST" action="?/delete" use:enhance={preserveTab('outgoing')}>
 									<input type="hidden" name="id" value={inv.id} />
 									<button type="submit" class="text-xs text-danger">{t(locale, 'common.delete')}</button>
 								</form>
@@ -234,5 +271,3 @@
 		{/if}
 	</Card>
 {/if}
-
-<WorkflowNext {locale} />

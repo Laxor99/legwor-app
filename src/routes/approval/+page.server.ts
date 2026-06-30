@@ -5,8 +5,6 @@ import { getDashboardData } from '$lib/services/dashboard';
 import {
 	getApproval,
 	getOrCreateApproval,
-	markApproved,
-	markRejected,
 	setApprovalFile,
 	submitForApproval
 } from '$lib/services/approvals';
@@ -57,31 +55,6 @@ export const actions: Actions = {
 			return { success: true, action: 'submit' };
 		} catch (e) {
 			console.error('approval submit failed:', e);
-			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
-		}
-	},
-	approve: async ({ request, url, locals }) => {
-		const form = await request.formData();
-		const { year, month } = ymFromForm(form, url);
-		const response = String(form.get('approverResponse') ?? '');
-		try {
-			await markApproved({ year, month }, response || undefined);
-			return { success: true, action: 'approve' };
-		} catch {
-			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
-		}
-	},
-	reject: async ({ request, url, locals }) => {
-		const form = await request.formData();
-		const { year, month } = ymFromForm(form, url);
-		const reason = String(form.get('rejectionReason') ?? '').trim();
-		if (!reason) {
-			return fail(400, { error: t(locals.locale, 'approval.rejectionRequired') });
-		}
-		try {
-			await markRejected({ year, month }, reason);
-			return { success: true, action: 'reject' };
-		} catch {
 			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
 		}
 	},

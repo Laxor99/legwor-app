@@ -38,6 +38,12 @@ export function formatMonthHu({ year, month }: YearMonth): string {
 	return `${year}. ${MONTH_NAMES_HU[month - 1]}`;
 }
 
+/** Match NAV table row labels like "február" to a calendar month (1–12). */
+export function matchHungarianMonthLabel(label: string, month: number): boolean {
+	const normalized = label.toLowerCase().replace(/\.$/, '').trim();
+	return normalized === MONTH_NAMES_HU[month - 1];
+}
+
 const MONTH_NAMES_EN = [
 	'January',
 	'February',

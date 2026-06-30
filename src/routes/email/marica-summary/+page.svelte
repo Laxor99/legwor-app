@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Card from '$lib/components/Card.svelte';
-	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
 	import { t } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
 	import { enhance } from '$app/forms';

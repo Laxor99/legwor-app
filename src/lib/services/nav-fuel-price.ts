@@ -1,3 +1,5 @@
+import { formatMonthHu, matchHungarianMonthLabel, shiftMonth, type YearMonth } from '$lib/utils/dates';
+
 export interface NavFuelPriceResult {
 	price: number;
 	monthLabel: string;
@@ -27,13 +29,8 @@ function parseStyle9Table(html: string): string[][] | null {
 	return rows.length > 0 ? rows : null;
 }
 
-/** Parse ESZ-95 unleaded petrol market price (piaci árszabás) from NAV HTML table. */
-export function parseNavEsz95MarketPrice(html: string): NavFuelPriceResult | null {
-	const rows = parseStyle9Table(html);
-	if (!rows || rows.length < 2) return null;
-
-	const header = rows[0];
-	const colIdx = header.findIndex((cell) => {
+function findEsz95MarketPriceColumn(header: string[]): number {
+	const marketIdx = header.findIndex((cell) => {
 		const normalized = cell.toLowerCase();
 		return (
 			normalized.includes('esz-95') &&
@@ -41,6 +38,52 @@ export function parseNavEsz95MarketPrice(html: string): NavFuelPriceResult | nul
 			normalized.includes('motorbenzin')
 		);
 	});
+	if (marketIdx >= 0) return marketIdx;
+
+	// Older NAV pages only list a single ESZ-95 petrol column.
+	return header.findIndex((cell) => {
+		const normalized = cell.toLowerCase();
+		return (
+			normalized.includes('esz-95') &&
+			normalized.includes('motorbenzin') &&
+			!normalized.includes('gázolaj')
+		);
+	});
+}
+
+/** Parse ESZ-95 unleaded petrol market price (piaci árszabás) for a specific month from NAV HTML. */
+export function parseNavEsz95MarketPriceForMonth(
+	html: string,
+	target: YearMonth
+): NavFuelPriceResult | null {
+	const rows = parseStyle9Table(html);
+	if (!rows || rows.length < 2) return null;
+
+	const colIdx = findEsz95MarketPriceColumn(rows[0]);
+	if (colIdx < 0) return null;
+
+	for (let i = 1; i < rows.length; i++) {
+		const monthLabel = rows[i][0]?.trim();
+		if (!monthLabel || !matchHungarianMonthLabel(monthLabel, target.month)) continue;
+
+		const raw = rows[i][colIdx]?.trim();
+		if (!raw || raw === '-') continue;
+
+		const price = Number(raw.replace(/\s/g, '').replace(',', '.'));
+		if (!Number.isFinite(price) || price <= 0) continue;
+
+		return { price, monthLabel: formatMonthHu(target) };
+	}
+
+	return null;
+}
+
+/** @deprecated Use parseNavEsz95MarketPriceForMonth with an explicit month instead. */
+export function parseNavEsz95MarketPrice(html: string): NavFuelPriceResult | null {
+	const rows = parseStyle9Table(html);
+	if (!rows || rows.length < 2) return null;
+
+	const colIdx = findEsz95MarketPriceColumn(rows[0]);
 	if (colIdx < 0) return null;
 
 	for (let i = 1; i < rows.length; i++) {
@@ -57,8 +100,25 @@ export function parseNavEsz95MarketPrice(html: string): NavFuelPriceResult | nul
 	return null;
 }
 
+export function navFuelUrlsForYear(baseUrl: string, year: number): string[] {
+	const urls = new Set<string>();
+	const fromBase = baseUrl.replace(
+		/\/(\d{4})-(ban|ben)-alkalmazhato-uzemanyagarak/i,
+		`/${year}-$2-alkalmazhato-uzemanyagarak`
+	);
+	if (fromBase !== baseUrl) urls.add(fromBase);
+	urls.add(`https://nav.gov.hu/ugyfeliranytu/uzemanyag/${year}-ban-alkalmazhato-uzemanyagarak`);
+	urls.add(`https://nav.gov.hu/ugyfeliranytu/uzemanyag/${year}-ben-alkalmazhato-uzemanyagarak`);
+	return [...urls];
+}
+
+export function navFuelUrlForYear(baseUrl: string, year: number): string {
+	return navFuelUrlsForYear(baseUrl, year)[0];
+}
+
 export async function fetchNavEsz95MarketPrice(
-	url: string
+	url: string,
+	target: YearMonth
 ): Promise<NavFuelPriceResult | null> {
 	if (!url) return null;
 
@@ -76,7 +136,7 @@ export async function fetchNavEsz95MarketPrice(
 		if (!res.ok) return null;
 
 		const html = await res.text();
-		return parseNavEsz95MarketPrice(html);
+		return parseNavEsz95MarketPriceForMonth(html, target);
 	} catch {
 		return null;
 	} finally {
@@ -84,14 +144,15 @@ export async function fetchNavEsz95MarketPrice(
 	}
 }
 
-export async function syncNavFuelPriceFromWebsite(navFuelUrl: string): Promise<{
-	price: number;
-	monthLabel: string;
-} | null> {
-	const result = await fetchNavEsz95MarketPrice(navFuelUrl);
-	if (!result) return null;
-
-	const { setConfig } = await import('./config');
-	await setConfig('nav_fuel_price', String(result.price));
-	return result;
+/** NAV fuel price for the month before the active travel month. */
+export async function syncNavFuelPriceForActiveMonth(
+	navFuelUrl: string,
+	activeMonth: YearMonth
+): Promise<NavFuelPriceResult | null> {
+	const fuelMonth = shiftMonth(activeMonth, -1);
+	for (const url of navFuelUrlsForYear(navFuelUrl, fuelMonth.year)) {
+		const result = await fetchNavEsz95MarketPrice(url, fuelMonth);
+		if (result) return result;
+	}
+	return null;
 }

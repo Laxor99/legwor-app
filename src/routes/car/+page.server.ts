@@ -8,7 +8,7 @@ import {
 	setMotorwayVignette
 } from '$lib/services/car';
 import { setConfig } from '$lib/services/config';
-import { syncNavFuelPriceFromWebsite } from '$lib/services/nav-fuel-price';
+import { syncNavFuelPriceForActiveMonth } from '$lib/services/nav-fuel-price';
 import { getDefaultActiveMonth, yearMonthFromForm } from '$lib/utils/dates';
 import { parseNumber } from '$lib/utils/format';
 import type { Actions, PageServerLoad } from './$types';
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 		let navFuelSync: { monthLabel: string } | null = null;
 		if (defaults.navFuelUrl) {
-			const synced = await syncNavFuelPriceFromWebsite(defaults.navFuelUrl);
+			const synced = await syncNavFuelPriceForActiveMonth(defaults.navFuelUrl, { year, month });
 			if (synced) {
 				defaults.navFuelPrice = synced.price;
 				navFuelSync = { monthLabel: synced.monthLabel };

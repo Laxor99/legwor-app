@@ -5,7 +5,36 @@
 
 	let { data, form } = $props();
 	const locale = $derived(data.locale);
-	let tab = $state<'general' | 'storage'>('general');
+
+	let localRootPath = $state(data.storage?.localRootPath ?? '');
+	let pickingFolder = $state(false);
+	let storageForm: HTMLFormElement | undefined = $state();
+
+	$effect(() => {
+		localRootPath = data.storage?.localRootPath ?? '';
+	});
+
+	async function chooseFolderAndSave() {
+		pickingFolder = true;
+		try {
+			const res = await fetch('/api/storage/pick-folder', { method: 'POST' });
+			const body = await res.json();
+			if (body.cancelled) return;
+			if (!res.ok || !body.path) {
+				storageError = body.error ?? t(locale, 'settings.pickFolderUnavailable');
+				return;
+			}
+			localRootPath = body.path;
+			storageError = '';
+			storageForm?.requestSubmit();
+		} catch {
+			storageError = t(locale, 'settings.pickFolderUnavailable');
+		} finally {
+			pickingFolder = false;
+		}
+	}
+
+	let storageError = $state('');
 </script>
 
 <svelte:head>
@@ -23,29 +52,10 @@
 {/if}
 
 {#if form?.success}
-	<div class="alert-success mb-4">
-		{form.testMessage ?? t(locale, 'common.saved')}
-	</div>
+	<div class="alert-success mb-4">{t(locale, 'common.saved')}</div>
 {/if}
 
-<div class="mb-4 flex gap-2">
-	<button
-		type="button"
-		class="btn-secondary {tab === 'general' ? 'tab-active' : ''}"
-		onclick={() => (tab = 'general')}
-	>
-		{t(locale, 'settings.general')}
-	</button>
-	<button
-		type="button"
-		class="btn-secondary {tab === 'storage' ? 'tab-active' : ''}"
-		onclick={() => (tab = 'storage')}
-	>
-		{t(locale, 'settings.storage')}
-	</button>
-</div>
-
-{#if tab === 'general'}
+<div class="grid gap-4">
 	<Card title={t(locale, 'settings.general')}>
 		<form method="POST" action="?/saveGeneral" use:enhance class="grid gap-4 lg:grid-cols-2">
 			<input type="hidden" name="year" value={data.year} />
@@ -97,56 +107,38 @@
 			</div>
 		</form>
 	</Card>
-{:else}
-	<Card title={t(locale, 'settings.storage')}>
-		<form method="POST" action="?/saveStorage" use:enhance class="space-y-4">
-			<fieldset class="space-y-2">
-				<legend class="text-sm font-medium">{t(locale, 'settings.storageMode')}</legend>
-				<label class="flex items-center gap-2 text-sm">
-					<input type="radio" name="storageType" value="local" checked={data.storage?.storageType !== 'supabase'} />
-					{t(locale, 'settings.localStorage')}
-				</label>
-				<label class="flex items-center gap-2 text-sm">
-					<input type="radio" name="storageType" value="supabase" checked={data.storage?.storageType === 'supabase'} />
-					{t(locale, 'settings.supabaseStorage')}
-				</label>
-			</fieldset>
+
+	<Card title={t(locale, 'settings.localStorage')}>
+		<form
+			bind:this={storageForm}
+			method="POST"
+			action="?/saveStorage"
+			use:enhance
+			class="space-y-4"
+		>
+			<p class="text-sm text-muted">{t(locale, 'settings.localStorageHint')}</p>
 			<div>
 				<label class="form-label" for="localRootPath">{t(locale, 'settings.localPath')}</label>
 				<input
 					id="localRootPath"
 					name="localRootPath"
-					value={data.storage?.localRootPath ?? './uploads'}
+					bind:value={localRootPath}
+					readonly
+					placeholder={t(locale, 'settings.localPathPlaceholder')}
 					class="w-full font-mono text-xs"
 				/>
 			</div>
-			<div class="grid gap-4 lg:grid-cols-2">
-				<div>
-					<label class="form-label" for="supabaseUrl">Supabase URL</label>
-					<input id="supabaseUrl" name="supabaseUrl" value={data.storage?.supabaseUrl ?? ''} class="w-full" />
-				</div>
-				<div>
-					<label class="form-label" for="supabaseBucket">{t(locale, 'settings.bucket')}</label>
-					<input id="supabaseBucket" name="supabaseBucket" value={data.storage?.supabaseBucket ?? ''} class="w-full" />
-				</div>
-			</div>
-			<div>
-				<label class="form-label" for="supabaseKey">{t(locale, 'settings.apiKey')}</label>
-				<input id="supabaseKey" name="supabaseKey" type="password" placeholder="••••••••" class="w-full" />
-			</div>
-			<p class="text-xs text-muted">{t(locale, 'settings.storageFolders')}</p>
-			<div class="flex flex-wrap gap-2">
-				<button type="submit" class="btn-primary">{t(locale, 'common.save')}</button>
-			</div>
-		</form>
-		<form method="POST" action="?/testStorage" use:enhance class="mt-4">
-			<button type="submit" class="btn-secondary">{t(locale, 'settings.testConnection')}</button>
-			{#if data.storage?.lastTestedAt}
-				<span class="ml-2 text-xs text-muted">
-					{data.storage.lastTestSuccess ? '✓' : '✗'}
-					{new Date(data.storage.lastTestedAt).toLocaleString(locale === 'hu' ? 'hu-HU' : 'en-US')}
-				</span>
+			{#if storageError}
+				<div class="alert-error">{storageError}</div>
 			{/if}
+			<button
+				type="button"
+				class="btn-primary"
+				disabled={pickingFolder}
+				onclick={chooseFolderAndSave}
+			>
+				{pickingFolder ? t(locale, 'settings.pickingFolder') : t(locale, 'common.save')}
+			</button>
 		</form>
 	</Card>
-{/if}
+</div>

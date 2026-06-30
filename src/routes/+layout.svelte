@@ -17,6 +17,7 @@
 <AppShell
 	locale={data.locale}
 	monthStatuses={data.monthStatuses}
+	workflowTasks={data.workflowTasks}
 	year={data.year}
 	month={data.month}
 >

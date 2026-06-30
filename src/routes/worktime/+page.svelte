@@ -2,7 +2,6 @@
 	import Card from '$lib/components/Card.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import WorkCalendar from '$lib/components/WorkCalendar.svelte';
-	import WorkflowNext from '$lib/components/WorkflowNext.svelte';
 	import { t } from '$lib/i18n';
 	import { formatMonth } from '$lib/utils/dates';
 	import { calcAnnualProgress } from '$lib/utils/calculations';
@@ -183,5 +182,3 @@
 		</div>
 	</Card>
 </div>
-
-<WorkflowNext {locale} />

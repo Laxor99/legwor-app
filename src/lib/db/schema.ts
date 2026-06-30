@@ -7,7 +7,8 @@ import {
 	decimal,
 	boolean,
 	date,
-	varchar
+	varchar,
+	primaryKey
 } from 'drizzle-orm/pg-core';
 
 export const monthConfig = pgTable('month_config', {
@@ -158,3 +159,15 @@ export const storageConfig = pgTable('storage_config', {
 	createdAt: timestamp('created_at').defaultNow(),
 	updatedAt: timestamp('updated_at').defaultNow()
 });
+
+export const workflowTaskOverrides = pgTable(
+	'workflow_task_overrides',
+	{
+		year: integer('year').notNull(),
+		month: integer('month').notNull(),
+		taskKey: varchar('task_key', { length: 30 }).notNull(),
+		skipped: boolean('skipped').notNull().default(true),
+		updatedAt: timestamp('updated_at').defaultNow()
+	},
+	(table) => [primaryKey({ columns: [table.year, table.month, table.taskKey] })]
+);

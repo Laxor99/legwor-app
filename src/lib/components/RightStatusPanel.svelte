@@ -69,15 +69,6 @@
 		if ((atTop && goingUp) || (atBottom && goingDown)) return;
 		e.stopPropagation();
 	}
-
-	function progressPercent(row: MonthStatusRow): number {
-		if (row.progressTotal <= 0) return 0;
-		return Math.round((row.progressDone / row.progressTotal) * 100);
-	}
-
-	function showProgress(row: MonthStatusRow): boolean {
-		return row.progressDone > 0 || row.status != null;
-	}
 </script>
 
 <aside class="status-panel hidden border-l border-border bg-surface xl:grid" style="grid-area: right">
@@ -116,31 +107,12 @@
 				onclick={() => selectMonth(row.year, row.month)}
 			>
 				<span
-					class="w-[4.75rem] shrink-0 truncate font-medium {isActive(row)
+					class="min-w-0 truncate font-medium {isActive(row)
 						? 'text-primary'
 						: 'text-foreground'}"
 				>
 					{formatMonthLabel({ year: row.year, month: row.month }, locale)}
 				</span>
-				<div class="flex min-w-0 flex-1 items-center justify-center">
-					{#if showProgress(row)}
-						<span
-							class="flex flex-col items-center justify-center gap-0.5"
-							title="{row.progressDone}/{row.progressTotal} {t(locale, 'statusPanel.progress')}"
-						>
-							<span class="block h-1.5 w-8 overflow-hidden rounded-full bg-surface">
-								<span
-									class="block h-full rounded-full bg-primary transition-all"
-									style="width: {progressPercent(row)}%"
-								></span>
-							</span>
-							<span class="text-[9px] tabular-nums leading-none text-muted-dim">
-								{row.progressDone}/{row.progressTotal}
-							</span>
-						</span>
-					{/if}
-				</div>
-				<div class="flex w-[5.5rem] shrink-0 justify-end">
 				{#if row.status}
 					<span
 						class="shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-medium {statusBadgeClass(row.status)}"
@@ -151,7 +123,6 @@
 						{t(locale, statusLabelKey(row.status))}
 					</span>
 				{/if}
-				</div>
 			</button>
 		{/each}
 	</div>

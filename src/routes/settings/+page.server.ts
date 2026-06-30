@@ -1,8 +1,9 @@
 import { fail } from '@sveltejs/kit';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
 import { t } from '$lib/i18n';
 import { getAllConfig, setConfig, setAnnualLimit } from '$lib/services/config';
 import { getStorageConfig, saveStorageConfig } from '$lib/services/storage-config';
-import { testStorageConnection } from '$lib/services/storage';
 import { getDefaultActiveMonth } from '$lib/utils/dates';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -45,33 +46,26 @@ export const actions: Actions = {
 			if (limit === 220 || limit === 228) {
 				await setAnnualLimit(year, limit);
 			}
-			return { success: true, section: 'general' };
+			return { success: true };
 		} catch {
 			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
 		}
 	},
 	saveStorage: async ({ request, locals }) => {
 		const form = await request.formData();
-		const storageType = String(form.get('storageType') ?? 'local');
-		if (storageType !== 'local' && storageType !== 'supabase') {
-			return fail(400, { error: t(locals.locale, 'errors.saveFailed') });
+		const localRootPath = String(form.get('localRootPath') ?? '').trim();
+		if (!localRootPath) {
+			return fail(400, { error: t(locals.locale, 'settings.pickFolderRequired') });
 		}
 		try {
+			await mkdir(path.resolve(localRootPath), { recursive: true });
 			await saveStorageConfig({
-				storageType: storageType as 'local' | 'supabase',
-				localRootPath: String(form.get('localRootPath') ?? ''),
-				supabaseUrl: String(form.get('supabaseUrl') ?? ''),
-				supabaseBucket: String(form.get('supabaseBucket') ?? ''),
-				supabaseKeyEncrypted: String(form.get('supabaseKey') ?? '')
+				storageType: 'local',
+				localRootPath
 			});
-			return { success: true, section: 'storage' };
+			return { success: true };
 		} catch {
-			return fail(500, { error: t(locals.locale, 'errors.saveFailed') });
+			return fail(500, { error: t(locals.locale, 'settings.pickFolderSaveFailed') });
 		}
-	},
-	testStorage: async ({ locals }) => {
-		const result = await testStorageConnection();
-		if (!result.ok) return fail(400, { error: result.message });
-		return { success: true, section: 'storage', testMessage: result.message };
 	}
 };
